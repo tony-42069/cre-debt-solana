@@ -1,0 +1,915 @@
+#!/usr/bin/env node
+
+const fs = require('fs');
+const path = require('path');
+const { execSync } = require('child_process');
+const readline = require('readline');
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+
+// Configuration
+const config = {
+  projectRoot: 'D:\\AI Projects\\cre-debt-solana',
+  github: {
+    repo: 'cre-debt-solana',
+    username: ''
+  }
+};
+
+// Create necessary directories
+const directories = [
+  '.github/workflows',
+  'programs/loan-core/src/state',
+  'programs/loan-core/src/instructions',
+  'programs/property-registry/src/state',
+  'programs/property-registry/src/instructions',
+  'programs/borrower-registry/src/state',
+  'programs/borrower-registry/src/instructions',
+  'app/public',
+  'app/src/components/common',
+  'app/src/components/borrower',
+  'app/src/components/property',
+  'app/src/components/loan',
+  'app/src/components/admin',
+  'app/src/pages',
+  'app/src/hooks',
+  'app/src/contexts',
+  'app/src/services',
+  'app/src/utils',
+  'app/src/types',
+  'app/src/assets',
+  'api/src/controllers',
+  'api/src/models',
+  'api/src/services',
+  'api/src/middleware',
+  'api/src/utils',
+  'api/src/config',
+  'api/src/routes',
+  'api/src/types',
+  'tests/e2e',
+  'tests/integration/api',
+  'tests/integration/blockchain',
+  'tests/unit/loan',
+  'tests/unit/property',
+  'tests/fixtures',
+  'tests/helpers',
+  'scripts',
+  'docs/architecture',
+  'docs/api',
+  'docs/smart-contracts',
+  'docs/user-guides',
+  'docs/development',
+  'sdk/src/loan',
+  'sdk/src/property',
+  'sdk/src/borrower',
+  'sdk/src/utils',
+  'sdk/src/types'
+];
+
+// Files to create
+const files = [
+  {
+    path: 'README.md',
+    content: fs.readFileSync(path.join(__dirname, 'project-readme.md'), 'utf8')
+  },
+  {
+    path: '.gitignore',
+    content: `
+# Rust
+/target
+**/*.rs.bk
+Cargo.lock
+
+# Node.js
+node_modules/
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Solana
+.anchor
+.DS_Store
+
+# IDE
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Build artifacts
+/dist
+/build
+/app/build
+/api/dist
+
+# Test artifacts
+/coverage
+
+# Logs
+logs
+*.log
+
+# Misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+`
+  },
+  {
+    path: 'Anchor.toml',
+    content: `
+[features]
+seeds = false
+skip-lint = false
+
+[programs.localnet]
+loan_core = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+property_registry = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+borrower_registry = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "localnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "yarn ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+`
+  },
+  {
+    path: 'package.json',
+    content: `
+{
+  "name": "cre-debt-solana",
+  "version": "0.1.0",
+  "description": "Commercial Real Estate Equity Access Platform on Solana",
+  "main": "index.js",
+  "scripts": {
+    "test": "anchor test",
+    "build": "anchor build",
+    "deploy": "anchor deploy",
+    "start:api": "cd api && yarn start",
+    "start:app": "cd app && yarn start",
+    "start": "concurrently \"yarn start:api\" \"yarn start:app\"",
+    "init:dev": "node scripts/init-dev.js",
+    "create:test-data": "node scripts/create-test-data.js"
+  },
+  "workspaces": [
+    "app",
+    "api",
+    "sdk",
+    "tests"
+  ],
+  "keywords": [
+    "solana",
+    "blockchain",
+    "defi",
+    "real-estate",
+    "commercial",
+    "anchor"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/chai": "^4.3.0",
+    "@types/mocha": "^9.0.0",
+    "chai": "^4.3.4",
+    "concurrently": "^7.0.0",
+    "mocha": "^9.0.3",
+    "ts-mocha": "^10.0.0",
+    "typescript": "^4.3.5"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.28.0",
+    "@solana/web3.js": "^1.73.0"
+  }
+}
+`
+  },
+  {
+    path: 'tsconfig.json',
+    content: `
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "commonjs",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "./dist",
+    "declaration": true,
+    "resolveJsonModule": true
+  },
+  "include": ["tests/**/*"],
+  "exclude": ["node_modules"]
+}
+`
+  },
+  {
+    path: 'programs/loan-core/Cargo.toml',
+    content: `
+[package]
+name = "loan-core"
+version = "0.1.0"
+description = "Core loan origination and servicing program for CRE-Debt-Solana platform"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "loan_core"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = "0.28.0"
+anchor-spl = "0.28.0"
+solana-program = "1.16.0"
+`
+  },
+  {
+    path: 'programs/property-registry/Cargo.toml',
+    content: `
+[package]
+name = "property-registry"
+version = "0.1.0"
+description = "Property registry program for CRE-Debt-Solana platform"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "property_registry"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = "0.28.0"
+anchor-spl = "0.28.0"
+solana-program = "1.16.0"
+loan-core = { path = "../loan-core", features = ["cpi"] }
+`
+  },
+  {
+    path: 'programs/borrower-registry/Cargo.toml',
+    content: `
+[package]
+name = "borrower-registry"
+version = "0.1.0"
+description = "Borrower registry program for CRE-Debt-Solana platform"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "borrower_registry"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = "0.28.0"
+anchor-spl = "0.28.0"
+solana-program = "1.16.0"
+loan-core = { path = "../loan-core", features = ["cpi"] }
+`
+  },
+  {
+    path: 'programs/loan-core/src/lib.rs',
+    content: fs.readFileSync(path.join(__dirname, 'loan-core-template.js'), 'utf8')
+  },
+  {
+    path: 'programs/property-registry/src/lib.rs',
+    content: `use anchor_lang::prelude::*;
+
+declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+
+#[program]
+pub mod property_registry {
+    use super::*;
+
+    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
+        // Initialization logic here
+        Ok(())
+    }
+
+    // More instructions will be added here
+}
+
+#[derive(Accounts)]
+pub struct Initialize<'info> {
+    #[account(mut)]
+    pub authority: Signer<'info>,
+    pub system_program: Program<'info, System>,
+}
+`
+  },
+  {
+    path: 'programs/borrower-registry/src/lib.rs',
+    content: `use anchor_lang::prelude::*;
+
+declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+
+#[program]
+pub mod borrower_registry {
+    use super::*;
+
+    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
+        // Initialization logic here
+        Ok(())
+    }
+
+    // More instructions will be added here
+}
+
+#[derive(Accounts)]
+pub struct Initialize<'info> {
+    #[account(mut)]
+    pub authority: Signer<'info>,
+    pub system_program: Program<'info, System>,
+}
+`
+  },
+  {
+    path: 'app/package.json',
+    content: `
+{
+  "name": "cre-debt-solana-app",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@emotion/react": "^11.10.5",
+    "@emotion/styled": "^11.10.5",
+    "@mui/icons-material": "^5.11.0",
+    "@mui/material": "^5.11.0",
+    "@mui/x-data-grid": "^5.17.17",
+    "@solana/wallet-adapter-base": "^0.9.22",
+    "@solana/wallet-adapter-react": "^0.15.30",
+    "@solana/wallet-adapter-react-ui": "^0.9.29",
+    "@solana/wallet-adapter-wallets": "^0.19.15",
+    "@solana/web3.js": "^1.73.0",
+    "axios": "^1.2.1",
+    "chart.js": "^4.1.1",
+    "react": "^18.2.0",
+    "react-chartjs-2": "^5.0.1",
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.41.0",
+    "react-router-dom": "^6.5.0",
+    "react-scripts": "5.0.1",
+    "typescript": "^4.9.4"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^5.16.5",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^14.4.3",
+    "@types/jest": "^29.2.4",
+    "@types/node": "^18.11.17",
+    "@types/react": "^18.0.26",
+    "@types/react-dom": "^18.0.10",
+    "eslint": "^8.30.0",
+    "eslint-config-react-app": "^7.0.1",
+    "prettier": "^2.8.1"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "lint": "eslint src --ext .ts,.tsx",
+    "format": "prettier --write 'src/**/*.{ts,tsx,css}'"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
+`
+  },
+  {
+    path: 'app/tsconfig.json',
+    content: `
+{
+  "compilerOptions": {
+    "target": "es5",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx"
+  },
+  "include": [
+    "src"
+  ]
+}
+`
+  },
+  {
+    path: 'app/src/index.tsx',
+    content: `import React from 'react';
+import ReactDOM from 'react-dom/client';
+import './index.css';
+import App from './App';
+import reportWebVitals from './reportWebVitals';
+
+const root = ReactDOM.createRoot(
+  document.getElementById('root') as HTMLElement
+);
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+
+reportWebVitals();
+`
+  },
+  {
+    path: 'app/src/App.tsx',
+    content: `import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import { WalletProvider } from './contexts/WalletContext';
+import { AuthProvider } from './contexts/AuthContext';
+import Dashboard from './pages/Dashboard';
+import PropertyList from './pages/PropertyList';
+import LoanApplication from './pages/LoanApplication';
+import Login from './pages/Login';
+import Layout from './components/common/Layout';
+
+const theme = createTheme({
+  palette: {
+    mode: 'light',
+    primary: {
+      main: '#2e7d32', // Green for financial theme
+    },
+    secondary: {
+      main: '#0d47a1', // Deep blue
+    },
+  },
+});
+
+function App() {
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <WalletProvider>
+        <AuthProvider>
+          <Router>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/" element={<Layout />}>
+                <Route index element={<Dashboard />} />
+                <Route path="properties" element={<PropertyList />} />
+                <Route path="apply" element={<LoanApplication />} />
+                {/* Add more routes here */}
+              </Route>
+            </Routes>
+          </Router>
+        </AuthProvider>
+      </WalletProvider>
+    </ThemeProvider>
+  );
+}
+
+export default App;
+`
+  },
+  {
+    path: 'api/package.json',
+    content: `
+{
+  "name": "cre-debt-solana-api",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "ts-node-dev --respawn src/index.ts",
+    "build": "tsc",
+    "test": "jest",
+    "lint": "eslint src --ext .ts",
+    "db:migrate": "sequelize-cli db:migrate",
+    "db:seed": "sequelize-cli db:seed:all"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.28.0",
+    "@solana/web3.js": "^1.73.0",
+    "bs58": "^5.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "express-async-handler": "^1.2.0",
+    "express-validator": "^6.14.2",
+    "helmet": "^6.0.1",
+    "jsonwebtoken": "^9.0.0",
+    "morgan": "^1.10.0",
+    "pg": "^8.8.0",
+    "sequelize": "^6.28.0",
+    "winston": "^3.8.2"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.13",
+    "@types/express": "^4.17.15",
+    "@types/jest": "^29.2.4",
+    "@types/jsonwebtoken": "^9.0.0",
+    "@types/morgan": "^1.9.3",
+    "@types/node": "^18.11.17",
+    "@types/pg": "^8.6.6",
+    "@typescript-eslint/eslint-plugin": "^5.47.0",
+    "@typescript-eslint/parser": "^5.47.0",
+    "eslint": "^8.30.0",
+    "jest": "^29.3.1",
+    "sequelize-cli": "^6.5.2",
+    "ts-jest": "^29.0.3",
+    "ts-node": "^10.9.1",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^4.9.4"
+  }
+}
+`
+  },
+  {
+    path: 'api/tsconfig.json',
+    content: `
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "commonjs",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "**/*.test.ts"]
+}
+`
+  },
+  {
+    path: 'api/src/index.ts',
+    content: `import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import { config } from './config/config';
+import { errorHandler } from './middleware/errorHandler';
+import { loanRoutes } from './routes/loan';
+import { propertyRoutes } from './routes/property';
+import { borrowerRoutes } from './routes/borrower';
+
+const app = express();
+
+// Middleware
+app.use(cors());
+app.use(helmet());
+app.use(morgan('dev'));
+app.use(express.json());
+
+// Routes
+app.use('/api/loans', loanRoutes);
+app.use('/api/properties', propertyRoutes);
+app.use('/api/borrowers', borrowerRoutes);
+
+// Health check
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
+// Error handling
+app.use(errorHandler);
+
+// Start server
+const PORT = config.port || 3001;
+app.listen(PORT, () => {
+  console.log(\`Server running on port \${PORT}\`);
+});
+
+export default app;
+`
+  },
+  {
+    path: 'api/src/config/config.ts',
+    content: `import dotenv from 'dotenv';
+import { Connection } from '@solana/web3.js';
+
+dotenv.config();
+
+export const config = {
+  port: process.env.PORT || 3001,
+  jwtSecret: process.env.JWT_SECRET || 'your-secret-key',
+  database: {
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT || '5432', 10),
+    username: process.env.DB_USERNAME || 'postgres',
+    password: process.env.DB_PASSWORD || 'postgres',
+    database: process.env.DB_NAME || 'cre_debt_solana',
+  },
+  solana: {
+    rpcUrl: process.env.SOLANA_RPC_URL || 'http://localhost:8899',
+    programIds: {
+      loanCore: process.env.LOAN_CORE_PROGRAM_ID || 'Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS',
+      propertyRegistry: process.env.PROPERTY_REGISTRY_PROGRAM_ID || 'Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS',
+      borrowerRegistry: process.env.BORROWER_REGISTRY_PROGRAM_ID || 'Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS',
+    },
+    usdcMint: process.env.USDC_MINT || 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+  },
+  admin: {
+    wallet: process.env.ADMIN_WALLET || '',
+  },
+};
+
+// Create Solana connection
+export const getSolanaConnection = (): Connection => {
+  return new Connection(config.solana.rpcUrl, 'confirmed');
+};
+`
+  },
+  {
+    path: 'scripts/init-dev.js',
+    content: `#!/usr/bin/env node
+const { execSync } = require('child_process');
+const fs = require('fs');
+const path = require('path');
+
+console.log('Initializing CRE-Debt-Solana development environment...');
+
+// Ensure we're in the project root
+try {
+  const currentDir = process.cwd();
+  if (!fs.existsSync(path.join(currentDir, 'Anchor.toml'))) {
+    console.error('Error: This script must be run from the project root directory.');
+    process.exit(1);
+  }
+} catch (err) {
+  console.error('Error checking directory:', err);
+  process.exit(1);
+}
+
+// Check if Solana CLI is installed
+try {
+  execSync('solana --version', { stdio: 'ignore' });
+  console.log('✓ Solana CLI is installed');
+} catch (err) {
+  console.error('✗ Solana CLI is not installed. Please install it first.');
+  process.exit(1);
+}
+
+// Check if Anchor is installed
+try {
+  execSync('anchor --version', { stdio: 'ignore' });
+  console.log('✓ Anchor is installed');
+} catch (err) {
+  console.error('✗ Anchor is not installed. Please install it first.');
+  process.exit(1);
+}
+
+// Create a new Solana wallet if none exists
+try {
+  console.log('Checking for Solana wallet...');
+  execSync('solana address', { stdio: 'ignore' });
+  console.log('✓ Solana wallet exists');
+} catch (err) {
+  console.log('Creating new Solana wallet...');
+  execSync('solana-keygen new --no-bip39-passphrase -o ~/.config/solana/id.json');
+  console.log('✓ New Solana wallet created');
+}
+
+// Configure Solana for localnet
+console.log('Configuring Solana for local development...');
+execSync('solana config set --url localhost');
+console.log('✓ Solana configured for localnet');
+
+// Install dependencies
+console.log('Installing project dependencies...');
+execSync('yarn install', { stdio: 'inherit' });
+console.log('✓ Dependencies installed');
+
+// Build Anchor programs
+console.log('Building Anchor programs...');
+try {
+  execSync('anchor build', { stdio: 'inherit' });
+  console.log('✓ Anchor programs built successfully');
+} catch (err) {
+  console.error('✗ Error building Anchor programs. Please check the logs above.');
+  process.exit(1);
+}
+
+// Get program IDs
+console.log('Retrieving program IDs...');
+try {
+  const loanCoreProgramId = execSync('solana address -k target/deploy/loan_core-keypair.json').toString().trim();
+  const propertyRegistryProgramId = execSync('solana address -k target/deploy/property_registry-keypair.json').toString().trim();
+  const borrowerRegistryProgramId = execSync('solana address -k target/deploy/borrower_registry-keypair.json').toString().trim();
+  
+  console.log(`Loan Core Program ID: ${loanCoreProgramId}`);
+  console.log(`Property Registry Program ID: ${propertyRegistryProgramId}`);
+  console.log(`Borrower Registry Program ID: ${borrowerRegistryProgramId}`);
+  
+  // Update Anchor.toml with program IDs
+  let anchorToml = fs.readFileSync('Anchor.toml', 'utf8');
+  anchorToml = anchorToml.replace(
+    /loan_core = ".*"/,
+    `loan_core = "${loanCoreProgramId}"`
+  );
+  anchorToml = anchorToml.replace(
+    /property_registry = ".*"/,
+    `property_registry = "${propertyRegistryProgramId}"`
+  );
+  anchorToml = anchorToml.replace(
+    /borrower_registry = ".*"/,
+    `borrower_registry = "${borrowerRegistryProgramId}"`
+  );
+  fs.writeFileSync('Anchor.toml', anchorToml);
+  
+  // Update declare_id! in program files
+  let loanCoreLib = fs.readFileSync('programs/loan-core/src/lib.rs', 'utf8');
+  loanCoreLib = loanCoreLib.replace(
+    /declare_id!\(".*"\);/,
+    `declare_id!("${loanCoreProgramId}");`
+  );
+  fs.writeFileSync('programs/loan-core/src/lib.rs', loanCoreLib);
+  
+  let propertyRegistryLib = fs.readFileSync('programs/property-registry/src/lib.rs', 'utf8');
+  propertyRegistryLib = propertyRegistryLib.replace(
+    /declare_id!\(".*"\);/,
+    `declare_id!("${propertyRegistryProgramId}");`
+  );
+  fs.writeFileSync('programs/property-registry/src/lib.rs', propertyRegistryLib);
+  
+  let borrowerRegistryLib = fs.readFileSync('programs/borrower-registry/src/lib.rs', 'utf8');
+  borrowerRegistryLib = borrowerRegistryLib.replace(
+    /declare_id!\(".*"\);/,
+    `declare_id!("${borrowerRegistryProgramId}");`
+  );
+  fs.writeFileSync('programs/borrower-registry/src/lib.rs', borrowerRegistryLib);
+  
+  console.log('✓ Program IDs updated in Anchor.toml and program files');
+} catch (err) {
+  console.error('✗ Error retrieving program IDs:', err);
+}
+
+// Create environment files
+console.log('Creating environment files...');
+
+// API .env
+const apiEnv = `
+PORT=3001
+JWT_SECRET=local-dev-secret-change-in-production
+SOLANA_RPC_URL=http://localhost:8899
+LOAN_CORE_PROGRAM_ID=${execSync('solana address -k target/deploy/loan_core-keypair.json').toString().trim()}
+PROPERTY_REGISTRY_PROGRAM_ID=${execSync('solana address -k target/deploy/property_registry-keypair.json').toString().trim()}
+BORROWER_REGISTRY_PROGRAM_ID=${execSync('solana address -k target/deploy/borrower_registry-keypair.json').toString().trim()}
+USDC_MINT=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
+ADMIN_WALLET=${execSync('solana address').toString().trim()}
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=postgres
+DB_PASSWORD=postgres
+DB_NAME=cre_debt_solana
+`;
+fs.writeFileSync('api/.env', apiEnv);
+
+// Frontend .env
+const appEnv = `
+REACT_APP_API_URL=http://localhost:3001/api
+REACT_APP_SOLANA_RPC_URL=http://localhost:8899
+REACT_APP_LOAN_CORE_PROGRAM_ID=${execSync('solana address -k target/deploy/loan_core-keypair.json').toString().trim()}
+REACT_APP_PROPERTY_REGISTRY_PROGRAM_ID=${execSync('solana address -k target/deploy/property_registry-keypair.json').toString().trim()}
+REACT_APP_BORROWER_REGISTRY_PROGRAM_ID=${execSync('solana address -k target/deploy/borrower_registry-keypair.json').toString().trim()}
+REACT_APP_USDC_MINT=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
+`;
+fs.writeFileSync('app/.env', appEnv);
+
+console.log('✓ Environment files created');
+
+// Check for PostgreSQL and create database
+console.log('Checking for PostgreSQL...');
+try {
+  execSync('psql --version', { stdio: 'ignore' });
+  console.log('✓ PostgreSQL is installed');
+  
+  // Create database if it doesn't exist
+  console.log('Creating database...');
+  try {
+    execSync('psql -U postgres -c "SELECT 1 FROM pg_database WHERE datname = \'cre_debt_solana\'"', { stdio: 'ignore' });
+    console.log('✓ Database already exists');
+  } catch (err) {
+    execSync('psql -U postgres -c "CREATE DATABASE cre_debt_solana"');
+    console.log('✓ Database created');
+  }
+} catch (err) {
+  console.warn('⚠ PostgreSQL not found or not running. You will need to set up the database manually.');
+}
+
+// Start a local validator
+console.log('Starting a local Solana validator in a separate terminal...');
+const isWindows = process.platform === 'win32';
+if (isWindows) {
+  // On Windows, start a new command prompt
+  const cmd = 'start cmd.exe /K solana-test-validator';
+  execSync(cmd);
+} else {
+  // On Unix-like systems, use screen or nohup
+  try {
+    execSync('which screen', { stdio: 'ignore' });
+    execSync('screen -dmS solana-validator solana-test-validator');
+  } catch (err) {
+    execSync('nohup solana-test-validator > validator.log 2>&1 &');
+  }
+}
+console.log('✓ Local Solana validator started');
+
+// Wait for validator to start
+console.log('Waiting for validator to start...');
+let attempts = 0;
+const maxAttempts = 10;
+while (attempts < maxAttempts) {
+  try {
+    execSync('solana cluster-version', { stdio: 'ignore' });
+    console.log('✓ Validator is running');
+    break;
+  } catch (err) {
+    process.stdout.write('.');
+    attempts++;
+    // Sleep for 2 seconds
+    execSync('sleep 2');
+  }
+}
+
+if (attempts >= maxAttempts) {
+  console.warn('⚠ Validator may not be running properly. Check manually.');
+}
+
+// Airdrop SOL to the wallet
+console.log('Airdropping SOL to your wallet...');
+try {
+  execSync('solana airdrop 10', { stdio: 'inherit' });
+  console.log('✓ Airdrop successful');
+} catch (err) {
+  console.warn('⚠ Airdrop failed. You may need to fund your wallet manually.');
+}
+
+// Final message
+console.log('\n✅ Development environment is ready!');
+console.log('\nNext steps:');
+console.log('1. Deploy the programs: yarn deploy');
+console.log('2. Start the API: cd api && yarn dev');
+console.log('3. Start the frontend: cd app && yarn start');
+console.log('\nHappy hacking! 🚀');
