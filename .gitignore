@@ -1,0 +1,5 @@
+# Ignore project documentation
+docs/
+
+# Ignore Solana test validator ledger
+test-ledger/
