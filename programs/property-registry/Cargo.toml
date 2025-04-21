@@ -1,0 +1,16 @@
+[package]
+name = "property-registry"
+version = "0.1.0"
+description = "Property registry program for CRE-Debt-Solana"
+edition = "2021"
+
+[features]
+no-entrypoint = []
+
+[dependencies]
+anchor-lang = { version = "0.29.0", features = ["init-if-needed"] }
+anchor-spl = "0.29.0"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "property_registry"

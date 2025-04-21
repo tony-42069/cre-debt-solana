@@ -1,0 +1,10 @@
+D:\AI Projects\cre-debt-solana\programs\property-registry\target\debug\deps\libanchor_spl-797a5e3c684e9544.rmeta: C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\lib.rs C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\associated_token.rs C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\mint.rs C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\token.rs C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\token_2022.rs C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\token_interface.rs
+
+D:\AI Projects\cre-debt-solana\programs\property-registry\target\debug\deps\anchor_spl-797a5e3c684e9544.d: C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\lib.rs C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\associated_token.rs C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\mint.rs C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\token.rs C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\token_2022.rs C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\token_interface.rs
+
+C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\lib.rs:
+C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\associated_token.rs:
+C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\mint.rs:
+C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\token.rs:
+C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\token_2022.rs:
+C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anchor-spl-0.29.0\src\token_interface.rs:

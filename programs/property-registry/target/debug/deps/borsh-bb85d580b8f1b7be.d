@@ -1,0 +1,11 @@
+D:\AI Projects\cre-debt-solana\programs\property-registry\target\debug\deps\libborsh-bb85d580b8f1b7be.rmeta: C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\borsh-0.9.3\src\lib.rs C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\borsh-0.9.3\src\de\mod.rs C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\borsh-0.9.3\src\de\hint.rs C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\borsh-0.9.3\src\schema.rs C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\borsh-0.9.3\src\schema_helpers.rs C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\borsh-0.9.3\src\ser\mod.rs C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\borsh-0.9.3\src\ser\helpers.rs
+
+D:\AI Projects\cre-debt-solana\programs\property-registry\target\debug\deps\borsh-bb85d580b8f1b7be.d: C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\borsh-0.9.3\src\lib.rs C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\borsh-0.9.3\src\de\mod.rs C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\borsh-0.9.3\src\de\hint.rs C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\borsh-0.9.3\src\schema.rs C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\borsh-0.9.3\src\schema_helpers.rs C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\borsh-0.9.3\src\ser\mod.rs C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\borsh-0.9.3\src\ser\helpers.rs
+
+C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\borsh-0.9.3\src\lib.rs:
+C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\borsh-0.9.3\src\de\mod.rs:
+C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\borsh-0.9.3\src\de\hint.rs:
+C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\borsh-0.9.3\src\schema.rs:
+C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\borsh-0.9.3\src\schema_helpers.rs:
+C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\borsh-0.9.3\src\ser\mod.rs:
+C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\borsh-0.9.3\src\ser\helpers.rs:
