@@ -2,6 +2,21 @@
 
 A decentralized platform for commercial real estate equity access on Solana. This platform enables property owners to access up to 90% of their property equity through blockchain-based secured debt instruments.
 
+## 🚨 CURRENT STATUS: PRODUCTION MVP SPRINT
+
+**Goal:** Deliver demo-able MVP in 4 weeks for VC pitching
+**Progress:** Week 1 of 4 - Building core smart contracts
+
+### ✅ What's Built
+- **Property Registry Smart Contract**: Fully implemented
+- **Project Structure**: Complete with documentation
+- **Development Environment**: Ready for development
+
+### 🔄 Currently Building
+- **Loan Core Smart Contract**: In progress
+- **Borrower Registry Smart Contract**: Next
+- **Backend API & Frontend**: Following smart contracts
+
 ## 🏢 Project Overview
 
 The CRE-Debt-Solana platform bridges traditional commercial real estate finance with DeFi by offering:
@@ -106,13 +121,44 @@ cd app
 yarn test
 ```
 
-## 🛣️ Roadmap
+## 🛣️ Current Sprint Roadmap
 
-### Phase 1: MVP (Hackathon)
-- Core loan origination and servicing functionality
-- Basic borrower dashboard
-- Property submission and valuation
-- UCC filing integration
+### Sprint 1: Core Smart Contracts (Week 1 of 4)
+- [x] Property Registry Smart Contract (✅ Complete)
+- [ ] Loan Core Smart Contract (🔄 In Progress)
+- [ ] Borrower Registry Smart Contract (📋 Planned)
+- [ ] Cross-program integration testing (📋 Planned)
+
+### Sprint 2: Backend API & Database (Week 2 of 4)
+- [ ] PostgreSQL database setup
+- [ ] Loan management API endpoints
+- [ ] Property management API
+- [ ] Borrower management API
+- [ ] Smart contract integration layer
+
+### Sprint 3: Frontend MVP (Week 3 of 4)
+- [ ] React application setup
+- [ ] Wallet integration (Phantom/Solflare)
+- [ ] Loan application flow
+- [ ] Borrower dashboard
+- [ ] Payment interface
+
+### Sprint 4: Integration & Demo (Week 4 of 4)
+- [ ] End-to-end integration testing
+- [ ] Demo preparation and polish
+- [ ] VC pitch materials
+- [ ] Production deployment setup
+
+## 🎯 MVP Success Criteria
+
+**Must-Have for VC Demo:**
+- [x] Property registration and verification
+- [ ] Complete loan origination flow
+- [ ] USDC loan funding
+- [ ] Borrower dashboard
+- [ ] End-to-end demo scenario
+
+## 📈 Post-MVP Roadmap
 
 ### Phase 2: Institutional Lender Integration
 - Lender marketplace for institutional capital
