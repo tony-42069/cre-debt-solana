@@ -12,8 +12,8 @@ pub struct Property {
     pub verified: bool,
 }
 
-// Temporary program ID - will be replaced with actual after deployment
-declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+// Program ID for Loan Core
+declare_id!("H4Rdq9n8KJ9P8n7Fg6PaFpoGXkYsidMpWTK6W2BeZ7FE");
 
 #[program]
 pub mod loan_core {
@@ -50,7 +50,7 @@ pub mod loan_core {
         loan_params: LoanParams,
     ) -> Result<()> {
         let loan = &mut ctx.accounts.loan;
-        let _platform_config = &ctx.accounts.platform_config;
+        let platform_config = &ctx.accounts.platform_config;
         let property = &ctx.accounts.property;
         let borrower = &ctx.accounts.borrower;
         let clock = Clock::get()?;

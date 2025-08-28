@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
-// Temporary program ID - will be replaced with actual after deployment
-declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+// Program ID for Borrower Registry
+declare_id!("H4Rdq9n8KJ9P8n7Fg6PaFpoGXkYsidMpWTK6W2BeZ7FE");
 
 #[program]
 pub mod borrower_registry {
@@ -165,7 +165,7 @@ pub struct PlatformConfig {
 }
 
 // Enums
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Eq)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq)]
 pub enum KycStatus {
     Pending,     // KYC not submitted
     Submitted,   // KYC submitted, under review

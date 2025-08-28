@@ -1,8 +1,8 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token;
 
-// Temporary program ID - will be replaced with actual after deployment
-declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+// Program ID for Property Registry
+declare_id!("H4Rdq9n8KJ9P8n7Fg6PaFpoGXkYsidMpWTK6W2BeZ7FE");
 
 #[program]
 pub mod property_registry {
