@@ -5,6 +5,10 @@ import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 // Import routes
 import propertyRoutes from './routes/properties';
@@ -130,10 +134,11 @@ app.use(errorHandler);
 // Start server
 const PORT = config.port;
 app.listen(PORT, () => {
-  console.log(`🚀 CRE-Debt-Solana API server running on port ${PORT}`);
-  console.log(`📚 API Documentation: ${config.apiBaseUrl}${config.apiDocs.path}`);
-  console.log(`🌍 Environment: ${config.nodeEnv}`);
-  console.log(`🔗 Solana Cluster: ${config.solana.cluster}`);
+  const logger = require('./middleware/logger').logger;
+  logger.info(`🚀 CRE-Debt-Solana API server running on port ${PORT}`);
+  logger.info(`📚 API Documentation: ${config.apiBaseUrl}${config.apiDocs.path}`);
+  logger.info(`🌍 Environment: ${config.nodeEnv}`);
+  logger.info(`🔗 Solana Cluster: ${config.solana.cluster}`);
 });
 
 export default app;

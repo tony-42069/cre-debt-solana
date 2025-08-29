@@ -72,6 +72,13 @@ exports.getProperties = getProperties;
 const getProperty = async (req, res, next) => {
     try {
         const { id } = req.params;
+        if (!id) {
+            res.status(400).json({
+                success: false,
+                error: 'Property ID is required'
+            });
+            return;
+        }
         const property = await prisma.property.findUnique({
             where: { id },
             include: {
@@ -85,10 +92,11 @@ const getProperty = async (req, res, next) => {
             }
         });
         if (!property) {
-            return res.status(404).json({
+            res.status(404).json({
                 success: false,
                 error: 'Property not found'
             });
+            return;
         }
         res.json({
             success: true,
@@ -180,7 +188,7 @@ exports.createProperty = [
                 data: {
                     action: 'PROPERTY_CREATED',
                     entityType: 'Property',
-                    entityId: property.id,
+                    entityId: property.id || '',
                     userId: user.id,
                     walletAddress: user.walletAddress,
                     newValues: {
@@ -259,7 +267,7 @@ exports.updateProperty = [
                 data: {
                     action: 'PROPERTY_UPDATED',
                     entityType: 'Property',
-                    entityId: id,
+                    entityId: id || '',
                     oldValues: existingProperty,
                     newValues: updateFields
                 }

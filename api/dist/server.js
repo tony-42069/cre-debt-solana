@@ -10,6 +10,8 @@ const compression_1 = __importDefault(require("compression"));
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
 const swagger_jsdoc_1 = __importDefault(require("swagger-jsdoc"));
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
 const properties_1 = __importDefault(require("./routes/properties"));
 const borrowers_1 = __importDefault(require("./routes/borrowers"));
 const loans_1 = __importDefault(require("./routes/loans"));
@@ -102,10 +104,11 @@ app.use('*', (req, res) => {
 app.use(errorHandler_1.errorHandler);
 const PORT = config_1.config.port;
 app.listen(PORT, () => {
-    console.log(`🚀 CRE-Debt-Solana API server running on port ${PORT}`);
-    console.log(`📚 API Documentation: ${config_1.config.apiBaseUrl}${config_1.config.apiDocs.path}`);
-    console.log(`🌍 Environment: ${config_1.config.nodeEnv}`);
-    console.log(`🔗 Solana Cluster: ${config_1.config.solana.cluster}`);
+    const logger = require('./middleware/logger').logger;
+    logger.info(`🚀 CRE-Debt-Solana API server running on port ${PORT}`);
+    logger.info(`📚 API Documentation: ${config_1.config.apiBaseUrl}${config_1.config.apiDocs.path}`);
+    logger.info(`🌍 Environment: ${config_1.config.nodeEnv}`);
+    logger.info(`🔗 Solana Cluster: ${config_1.config.solana.cluster}`);
 });
 exports.default = app;
 //# sourceMappingURL=server.js.map
