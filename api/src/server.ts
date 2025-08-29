@@ -1,0 +1,135 @@
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import compression from 'compression';
+import rateLimit from 'express-rate-limit';
+import swaggerUi from 'swagger-ui-express';
+import swaggerJsdoc from 'swagger-jsdoc';
+
+// Import routes
+import propertyRoutes from './routes/properties';
+import borrowerRoutes from './routes/borrowers';
+import loanRoutes from './routes/loans';
+import platformRoutes from './routes/platform';
+
+// Import middleware
+import { errorHandler } from './middleware/errorHandler';
+import { loggerMiddleware } from './middleware/logger';
+
+// Import config
+import { config } from './config';
+
+// Create Express app
+const app = express();
+
+// Security middleware
+app.use(helmet());
+app.use(cors({
+  origin: config.cors.origin,
+  credentials: true
+}));
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: config.rateLimit.windowMs,
+  max: config.rateLimit.maxRequests,
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(limiter);
+
+// Body parsing middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Compression middleware
+app.use(compression());
+
+// Logging middleware
+app.use(loggerMiddleware);
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    environment: config.nodeEnv,
+    version: '1.0.0'
+  });
+});
+
+// API routes
+app.use('/api/properties', propertyRoutes);
+app.use('/api/borrowers', borrowerRoutes);
+app.use('/api/loans', loanRoutes);
+app.use('/api/platform', platformRoutes);
+
+// Swagger documentation
+if (config.apiDocs.enabled) {
+  const swaggerOptions = {
+    definition: {
+      openapi: '3.0.0',
+      info: {
+        title: 'CRE-Debt-Solana API',
+        version: '1.0.0',
+        description: 'Backend API for CRE-Debt-Solana platform',
+      },
+      servers: [
+        {
+          url: config.apiBaseUrl,
+          description: 'Development server',
+        },
+      ],
+      components: {
+        securitySchemes: {
+          bearerAuth: {
+            type: 'http',
+            scheme: 'bearer',
+            bearerFormat: 'JWT',
+          },
+        },
+      },
+      security: [
+        {
+          bearerAuth: [],
+        },
+      ],
+    },
+    apis: ['./src/routes/*.ts', './src/controllers/**/*.ts'],
+  };
+
+  const swaggerSpec = swaggerJsdoc(swaggerOptions);
+  app.use(config.apiDocs.path, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+  // Swagger JSON endpoint
+  app.get('/api-docs.json', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(swaggerSpec);
+  });
+}
+
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    error: {
+      code: 'NOT_FOUND',
+      message: `Route ${req.originalUrl} not found`
+    }
+  });
+});
+
+// Error handling middleware (must be last)
+app.use(errorHandler);
+
+// Start server
+const PORT = config.port;
+app.listen(PORT, () => {
+  console.log(`🚀 CRE-Debt-Solana API server running on port ${PORT}`);
+  console.log(`📚 API Documentation: ${config.apiBaseUrl}${config.apiDocs.path}`);
+  console.log(`🌍 Environment: ${config.nodeEnv}`);
+  console.log(`🔗 Solana Cluster: ${config.solana.cluster}`);
+});
+
+export default app;

@@ -1,0 +1,4 @@
+{"ip":"::1","level":"info","message":"Request received","method":"GET","service":"cre-debt-api","timestamp":"2025-08-29T02:22:30.812Z","url":"/","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"}
+{"duration":"26ms","ip":"::1","level":"warn","message":"Request completed","method":"GET","service":"cre-debt-api","statusCode":404,"timestamp":"2025-08-29T02:22:30.835Z","url":"/"}
+{"ip":"::1","level":"info","message":"Request received","method":"GET","service":"cre-debt-api","timestamp":"2025-08-29T02:22:31.007Z","url":"/favicon.ico","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"}
+{"duration":"5ms","ip":"::1","level":"warn","message":"Request completed","method":"GET","service":"cre-debt-api","statusCode":404,"timestamp":"2025-08-29T02:22:31.013Z","url":"/"}
