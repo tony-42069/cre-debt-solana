@@ -1,0 +1,7 @@
+D:\AI Projects\cre-debt-solana\programs\borrower-registry\target\debug\deps\libcfg_if-704bc04cd1e6c7f1.rmeta: C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\cfg-if-1.0.3\src\lib.rs
+
+D:\AI Projects\cre-debt-solana\programs\borrower-registry\target\debug\deps\libcfg_if-704bc04cd1e6c7f1.rlib: C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\cfg-if-1.0.3\src\lib.rs
+
+D:\AI Projects\cre-debt-solana\programs\borrower-registry\target\debug\deps\cfg_if-704bc04cd1e6c7f1.d: C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\cfg-if-1.0.3\src\lib.rs
+
+C:\Users\Dorian\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\cfg-if-1.0.3\src\lib.rs:
