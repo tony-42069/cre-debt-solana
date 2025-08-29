@@ -11,6 +11,7 @@ import propertyRoutes from './routes/properties';
 import borrowerRoutes from './routes/borrowers';
 import loanRoutes from './routes/loans';
 import platformRoutes from './routes/platform';
+import dashboardRoutes from './routes/dashboard';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler';
@@ -64,6 +65,7 @@ app.use('/api/properties', propertyRoutes);
 app.use('/api/borrowers', borrowerRoutes);
 app.use('/api/loans', loanRoutes);
 app.use('/api/platform', platformRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Swagger documentation
 if (config.apiDocs.enabled) {
