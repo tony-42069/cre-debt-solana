@@ -14,6 +14,8 @@ const properties_1 = __importDefault(require("./routes/properties"));
 const borrowers_1 = __importDefault(require("./routes/borrowers"));
 const loans_1 = __importDefault(require("./routes/loans"));
 const platform_1 = __importDefault(require("./routes/platform"));
+const dashboard_1 = __importDefault(require("./routes/dashboard"));
+const payments_1 = __importDefault(require("./routes/payments"));
 const errorHandler_1 = require("./middleware/errorHandler");
 const logger_1 = require("./middleware/logger");
 const config_1 = require("./config");
@@ -47,6 +49,8 @@ app.use('/api/properties', properties_1.default);
 app.use('/api/borrowers', borrowers_1.default);
 app.use('/api/loans', loans_1.default);
 app.use('/api/platform', platform_1.default);
+app.use('/api/dashboard', dashboard_1.default);
+app.use('/api/payments', payments_1.default);
 if (config_1.config.apiDocs.enabled) {
     const swaggerOptions = {
         definition: {
