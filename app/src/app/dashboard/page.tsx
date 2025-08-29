@@ -15,8 +15,11 @@ import {
   ArrowRight,
   Plus,
   Eye,
-  Download
+  Download,
+  CreditCard
 } from 'lucide-react'
+import { PaymentHistory } from '@/components/payments/PaymentHistory'
+import { PaymentSchedule } from '@/components/payments/PaymentSchedule'
 import Link from 'next/link'
 
 interface DashboardStats {
@@ -475,19 +478,9 @@ const DashboardPage: FC = () => {
           )}
 
           {activeTab === 'payments' && (
-            <div className="bg-white rounded-lg border border-gray-200">
-              <div className="p-6 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">Payment Management</h3>
-              </div>
-              <div className="p-6">
-                <div className="text-center py-12">
-                  <DollarSign className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                  <h4 className="text-lg font-medium text-gray-900 mb-2">Payment System Coming Soon</h4>
-                  <p className="text-gray-600">
-                    USDC payment integration will be available in Phase 4
-                  </p>
-                </div>
-              </div>
+            <div className="space-y-6">
+              <PaymentSchedule />
+              <PaymentHistory />
             </div>
           )}
         </div>
