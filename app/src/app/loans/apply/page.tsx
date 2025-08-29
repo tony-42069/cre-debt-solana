@@ -35,16 +35,47 @@ const LoanApplicationPage: FC = () => {
   const handleSubmit = async (formData: any) => {
     setIsSubmitting(true)
     try {
-      // TODO: Implement API call to submit loan application
-      console.log('Submitting loan application:', formData)
+      const { publicKey } = useWallet()
+      const walletAddress = publicKey?.toBase58()
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      if (!walletAddress) {
+        throw new Error('Wallet not connected')
+      }
 
-      // Redirect to dashboard
-      router.push('/dashboard')
+      // Prepare loan application data
+      const applicationData = {
+        ...formData,
+        walletAddress,
+        applicationId: `APP-${Date.now()}`,
+        status: 'DRAFT'
+      }
+
+      // Submit loan application
+      const response = await fetch('/api/loans', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(applicationData)
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to submit loan application')
+      }
+
+      const result = await response.json()
+
+      if (result.success) {
+        // Redirect to dashboard with success message
+        router.push('/dashboard?application=success')
+      } else {
+        throw new Error(result.error || 'Failed to submit loan application')
+      }
     } catch (error) {
       console.error('Error submitting loan application:', error)
+      // In a real app, you'd show an error toast or modal here
+      alert(`Error submitting application: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setIsSubmitting(false)
     }

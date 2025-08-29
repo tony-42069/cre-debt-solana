@@ -1,7 +1,8 @@
 'use client'
 
 import { FC, useState, useEffect } from 'react'
-import { Building2, MapPin, DollarSign, ArrowRight, RefreshCw } from 'lucide-react'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { Building2, MapPin, DollarSign, ArrowRight, RefreshCw, AlertCircle } from 'lucide-react'
 
 interface Property {
   id: string
@@ -33,48 +34,50 @@ export const PropertySelectionStep: FC<PropertySelectionStepProps> = ({
   onUpdate,
   onNext
 }) => {
+  const { publicKey, connected } = useWallet()
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null)
 
   useEffect(() => {
-    fetchProperties()
-  }, [])
+    if (connected && publicKey) {
+      fetchProperties()
+    } else {
+      setLoading(false)
+    }
+  }, [connected, publicKey])
 
   const fetchProperties = async () => {
     try {
       setLoading(true)
-      // TODO: Replace with actual API call
-      // const response = await fetch('/api/properties?walletAddress=...')
-      // const data = await response.json()
+      setError(null)
 
-      // Mock data for now
-      const mockProperties: Property[] = [
-        {
-          id: '1',
-          propertyId: 'PROP-001',
-          address: '123 Main Street',
-          city: 'New York',
-          state: 'NY',
-          appraisedValue: 2500000,
-          status: 'VERIFIED',
-          createdAt: '2024-01-15T10:00:00Z'
-        },
-        {
-          id: '2',
-          propertyId: 'PROP-002',
-          address: '456 Oak Avenue',
-          city: 'Los Angeles',
-          state: 'CA',
-          appraisedValue: 1800000,
-          status: 'VERIFIED',
-          createdAt: '2024-02-20T14:30:00Z'
-        }
-      ]
+      const walletAddress = publicKey?.toBase58()
+      if (!walletAddress) {
+        throw new Error('Wallet not connected')
+      }
 
-      setProperties(mockProperties)
+      const response = await fetch(`/api/properties?walletAddress=${walletAddress}`)
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch properties: ${response.statusText}`)
+      }
+
+      const result = await response.json()
+
+      if (result.success) {
+        // Filter only verified properties that can be used for loans
+        const eligibleProperties = result.data.filter(
+          (property: Property) => property.status === 'VERIFIED' || property.status === 'ACTIVE'
+        )
+        setProperties(eligibleProperties)
+      } else {
+        throw new Error(result.error || 'Failed to fetch properties')
+      }
     } catch (error) {
       console.error('Error fetching properties:', error)
+      setError(error instanceof Error ? error.message : 'Failed to load properties')
     } finally {
       setLoading(false)
     }
