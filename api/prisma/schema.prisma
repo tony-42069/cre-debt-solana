@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 // User/Borrower model - represents wallet-connected users
@@ -15,8 +15,8 @@ model User {
   id                String   @id @default(cuid())
   walletAddress     String   @unique // Solana wallet address
   email             String?  @unique
-  entityType        EntityType // Individual, LLC, Corporation
-  kycStatus         KycStatus @default(PENDING)
+  entityType        String   @default("INDIVIDUAL") // Individual, LLC, Corporation
+  kycStatus         String   @default("PENDING") // PENDING, SUBMITTED, APPROVED, REJECTED, EXPIRED
   kycVerifiedAt     DateTime?
   kycProvider       String?
   riskScore         Int?     @default(500) // 0-1000 scale
@@ -41,7 +41,7 @@ model Property {
   owner             User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
   // Property details
-  propertyType      PropertyType
+  propertyType      String   @default("OFFICE") // OFFICE, RETAIL, INDUSTRIAL, MULTIFAMILY, HOSPITALITY, LAND, SPECIALTY
   address           String
   city              String
   state             String
@@ -52,12 +52,12 @@ model Property {
   appraisedValue    Float // Property value in USD
   ltvRatio          Float? // Loan-to-value ratio
   valuationDate     DateTime
-  valuationMethod   ValuationMethod
+  valuationMethod   String   @default("APPRAISAL") // APPRAISAL, AVM, INCOME, SALES_COMPARISON, COST_APPROACH
   valuationProvider String
   valuationReport   String? // IPFS hash of valuation report
 
   // Property status
-  status            PropertyStatus @default(DRAFT)
+  status            String   @default("DRAFT") // DRAFT, SUBMITTED, UNDER_REVIEW, VERIFIED, REJECTED, ACTIVE, INACTIVE
   verified          Boolean @default(false)
   verifiedAt        DateTime?
   verifiedBy        String?
@@ -92,7 +92,7 @@ model LoanApplication {
   ltvRatio          Float // Requested LTV ratio
 
   // Application status
-  status            ApplicationStatus @default(DRAFT)
+  status            String   @default("DRAFT") // DRAFT, SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED, CANCELLED
   submittedAt       DateTime?
   reviewedAt        DateTime?
   reviewedBy        String?
@@ -134,7 +134,7 @@ model Loan {
   ltvRatio          Float // Final LTV ratio
 
   // Loan status and lifecycle
-  status            LoanStatus @default(PENDING)
+  status            String   @default("PENDING") // PENDING, APPROVED, FUNDED, ACTIVE, DELINQUENT, DEFAULTED, COMPLETED, CANCELLED
   fundedAt          DateTime?
   maturityDate      DateTime
   nextPaymentDue    DateTime?
@@ -172,8 +172,8 @@ model Payment {
 
   // Payment details
   amount            Float // Payment amount in USD
-  paymentType       PaymentType // Principal, Interest, Fee, etc.
-  paymentMethod     PaymentMethod // USDC Transfer, etc.
+  paymentType       String   @default("PRINCIPAL") // PRINCIPAL, INTEREST, FEE, LATE_FEE, PREPAYMENT, FULL_PAYMENT
+  paymentMethod     String   @default("USDC_TRANSFER") // USDC_TRANSFER, WIRE_TRANSFER, ACH, CHECK
 
   // Payment breakdown
   principalPortion  Float @default(0)
@@ -181,7 +181,7 @@ model Payment {
   feePortion        Float @default(0)
 
   // Payment status
-  status            PaymentStatus @default(PENDING)
+  status            String   @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED, CANCELLED
   processedAt       DateTime?
   confirmedAt       DateTime?
 
@@ -249,9 +249,9 @@ model AuditLog {
   walletAddress     String? // Wallet address involved
 
   // Action details
-  oldValues         Json? // Previous values (for updates)
-  newValues         Json? // New values (for updates/creates)
-  metadata          Json? // Additional context
+  oldValues         String? // Previous values (for updates) - JSON string
+  newValues         String? // New values (for updates/creates) - JSON string
+  metadata          String? // Additional context - JSON string
 
   // Blockchain context
   blockchainTx      String?
@@ -261,93 +261,4 @@ model AuditLog {
   createdAt         DateTime @default(now())
 
   @@map("audit_logs")
-}
-
-// Enums
-enum EntityType {
-  INDIVIDUAL
-  LLC
-  CORPORATION
-  TRUST
-  PARTNERSHIP
-}
-
-enum KycStatus {
-  PENDING
-  SUBMITTED
-  APPROVED
-  REJECTED
-  EXPIRED
-}
-
-enum PropertyType {
-  OFFICE
-  RETAIL
-  INDUSTRIAL
-  MULTIFAMILY
-  HOSPITALITY
-  LAND
-  SPECIALTY
-}
-
-enum ValuationMethod {
-  APPRAISAL
-  AVM // Automated Valuation Model
-  INCOME // Income capitalization
-  SALES_COMPARISON
-  COST_APPROACH
-}
-
-enum PropertyStatus {
-  DRAFT
-  SUBMITTED
-  UNDER_REVIEW
-  VERIFIED
-  REJECTED
-  ACTIVE
-  INACTIVE
-}
-
-enum ApplicationStatus {
-  DRAFT
-  SUBMITTED
-  UNDER_REVIEW
-  APPROVED
-  REJECTED
-  CANCELLED
-}
-
-enum LoanStatus {
-  PENDING
-  APPROVED
-  FUNDED
-  ACTIVE
-  DELINQUENT
-  DEFAULTED
-  COMPLETED
-  CANCELLED
-}
-
-enum PaymentType {
-  PRINCIPAL
-  INTEREST
-  FEE
-  LATE_FEE
-  PREPAYMENT
-  FULL_PAYMENT
-}
-
-enum PaymentMethod {
-  USDC_TRANSFER
-  WIRE_TRANSFER
-  ACH
-  CHECK
-}
-
-enum PaymentStatus {
-  PENDING
-  PROCESSING
-  COMPLETED
-  FAILED
-  CANCELLED
 }

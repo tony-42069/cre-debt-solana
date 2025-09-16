@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 
-export const getBorrowers = async (req: Request, res: Response, next: NextFunction) => {
+export const getBorrowers = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     res.json({ success: true, message: 'Get borrowers endpoint - Coming soon!' });
   } catch (error) {
@@ -8,7 +8,7 @@ export const getBorrowers = async (req: Request, res: Response, next: NextFuncti
   }
 };
 
-export const getBorrower = async (req: Request, res: Response, next: NextFunction) => {
+export const getBorrower = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     res.json({ success: true, message: 'Get borrower endpoint - Coming soon!' });
   } catch (error) {
@@ -16,7 +16,7 @@ export const getBorrower = async (req: Request, res: Response, next: NextFunctio
   }
 };
 
-export const createBorrower = async (req: Request, res: Response, next: NextFunction) => {
+export const createBorrower = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     res.json({ success: true, message: 'Create borrower endpoint - Coming soon!' });
   } catch (error) {

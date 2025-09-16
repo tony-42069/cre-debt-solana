@@ -270,12 +270,13 @@ export const createLoanApplication = [
           entityId: application.id,
           userId: user.id,
           walletAddress: user.walletAddress,
-          newValues: {
+          oldValues: '',
+          newValues: JSON.stringify({
             applicationId,
             requestedAmount: requestedAmountNum,
             ltvRatio,
             propertyId
-          }
+          })
         }
       });
 
@@ -361,8 +362,10 @@ export const updateLoanApplication = [
           action: 'LOAN_APPLICATION_UPDATED',
           entityType: 'LoanApplication',
           entityId: id,
-          oldValues: existingApplication,
-          newValues: updateFields
+          userId: existingApplication.borrowerId,
+          walletAddress: '', // Would need to fetch from user table
+          oldValues: JSON.stringify(existingApplication),
+          newValues: JSON.stringify(updateFields)
         }
       });
 
@@ -418,10 +421,13 @@ export const submitLoanApplication = async (req: Request, res: Response, next: N
         action: 'LOAN_APPLICATION_SUBMITTED',
         entityType: 'LoanApplication',
         entityId: id,
-        newValues: {
+        userId: application.borrowerId,
+        walletAddress: '', // Would need to fetch from user table
+        oldValues: '',
+        newValues: JSON.stringify({
           status: 'SUBMITTED',
           submittedAt: new Date()
-        }
+        })
       }
     });
 
@@ -496,10 +502,13 @@ export const approveLoanApplication = async (req: Request, res: Response, next: 
         action: 'LOAN_APPLICATION_APPROVED',
         entityType: 'LoanApplication',
         entityId: id,
-        newValues: {
+        userId: application.borrowerId,
+        walletAddress: '', // Would need to fetch from user table
+        oldValues: '',
+        newValues: JSON.stringify({
           status: 'APPROVED',
           loanId: loan.id
-        }
+        })
       }
     });
 
@@ -556,10 +565,13 @@ export const rejectLoanApplication = async (req: Request, res: Response, next: N
         action: 'LOAN_APPLICATION_REJECTED',
         entityType: 'LoanApplication',
         entityId: id,
-        newValues: {
+        userId: application.borrowerId,
+        walletAddress: '', // Would need to fetch from user table
+        oldValues: '',
+        newValues: JSON.stringify({
           status: 'REJECTED',
           rejectionReason: reason || 'Application rejected by reviewer'
-        }
+        })
       }
     });
 

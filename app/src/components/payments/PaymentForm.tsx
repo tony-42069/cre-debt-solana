@@ -3,6 +3,7 @@
 import { FC, useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { DollarSign, CreditCard, AlertCircle, CheckCircle } from 'lucide-react'
+import { apiService } from '@/lib/api'
 
 interface PaymentFormProps {
   loanId: string
@@ -38,37 +39,30 @@ export const PaymentForm: FC<PaymentFormProps> = ({
     setIsProcessing(true)
 
     try {
-      // For now, simulate USDC payment processing
-      // In production, this would integrate with actual USDC transfer
-      const response = await fetch('/api/payments/process', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          loanId,
-          amount,
-          paymentMethod,
-          walletAddress: publicKey.toBase58(),
-          dueDate
-        })
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Payment processing failed')
+      // Prepare payment data
+      const paymentData = {
+        loanId,
+        amount,
+        paymentMethod,
+        walletAddress: publicKey.toString(),
+        dueDate
       }
 
-      const result = await response.json()
+      console.log('Processing payment:', paymentData)
 
-      if (result.success) {
-        onPaymentSuccess(result.transactionId)
+      // Call API service
+      const response = await apiService.processPayment(paymentData)
+
+      if (response.success) {
+        console.log('Payment processed successfully:', response.data)
+        onPaymentSuccess(response.data.transactionId || 'TXN_SUCCESS')
       } else {
-        throw new Error(result.error || 'Payment failed')
+        console.error('Payment failed:', response.error)
+        onPaymentError(response.error || 'Payment processing failed')
       }
     } catch (error) {
       console.error('Payment error:', error)
-      onPaymentError(error instanceof Error ? error.message : 'Payment failed')
+      onPaymentError('Network error occurred. Please try again.')
     } finally {
       setIsProcessing(false)
     }

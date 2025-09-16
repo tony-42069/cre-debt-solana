@@ -3,6 +3,7 @@
 import { FC, useState, useEffect } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { Calendar, DollarSign, Clock, AlertCircle, CheckCircle, CreditCard } from 'lucide-react'
+import { apiService } from '@/lib/api'
 
 interface UpcomingPayment {
   id: string
@@ -38,20 +39,19 @@ export const PaymentSchedule: FC = () => {
   const fetchUpcomingPayments = async () => {
     try {
       setLoading(true)
-      const walletAddress = publicKey?.toBase58()
+      const walletAddress = publicKey?.toString()
 
       if (!walletAddress) return
 
-      const response = await fetch(`/api/payments/upcoming?walletAddress=${walletAddress}`)
+      console.log('Fetching upcoming payments for:', walletAddress)
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch upcoming payments')
-      }
+      const response = await apiService.getUpcomingPayments(walletAddress)
 
-      const result = await response.json()
-
-      if (result.success) {
-        setUpcomingPayments(result.data)
+      if (response.success) {
+        setUpcomingPayments(response.data)
+        console.log('Upcoming payments loaded:', response.data)
+      } else {
+        console.error('Failed to fetch upcoming payments:', response.error)
       }
     } catch (error) {
       console.error('Error fetching upcoming payments:', error)

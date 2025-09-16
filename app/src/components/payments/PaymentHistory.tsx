@@ -3,6 +3,7 @@
 import { FC, useState, useEffect } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { History, DollarSign, Calendar, CheckCircle, Clock, AlertCircle, Download } from 'lucide-react'
+import { apiService } from '@/lib/api'
 
 interface Payment {
   id: string
@@ -44,20 +45,19 @@ export const PaymentHistory: FC = () => {
   const fetchPaymentHistory = async () => {
     try {
       setLoading(true)
-      const walletAddress = publicKey?.toBase58()
+      const walletAddress = publicKey?.toString()
 
       if (!walletAddress) return
 
-      const response = await fetch(`/api/payments/history?walletAddress=${walletAddress}`)
+      console.log('Fetching payment history for:', walletAddress)
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch payment history')
-      }
+      const response = await apiService.getPaymentHistory(walletAddress)
 
-      const result = await response.json()
-
-      if (result.success) {
-        setPayments(result.data)
+      if (response.success) {
+        setPayments(response.data)
+        console.log('Payment history loaded:', response.data)
+      } else {
+        console.error('Failed to fetch payment history:', response.error)
       }
     } catch (error) {
       console.error('Error fetching payment history:', error)

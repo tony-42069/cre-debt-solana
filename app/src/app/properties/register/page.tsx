@@ -6,12 +6,14 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import { PropertyForm } from '@/components/forms/PropertyForm'
 import { ArrowLeft, Building2, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
+import { apiService } from '@/lib/api'
 
 const PropertyRegistrationPage: FC = () => {
-  const { connected } = useWallet()
+  const { connected, publicKey } = useWallet()
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const steps = [
     { id: 1, title: 'Property Details', description: 'Basic property information' },
@@ -33,18 +35,49 @@ const PropertyRegistrationPage: FC = () => {
   }
 
   const handleSubmit = async (formData: any) => {
+    if (!publicKey) {
+      setSubmitError('Wallet not connected')
+      return
+    }
+
     setIsSubmitting(true)
+    setSubmitError(null)
+
     try {
-      // TODO: Implement API call to submit property registration
-      console.log('Submitting property registration:', formData)
+      // Create FormData for multipart upload
+      const submitData = new FormData()
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      // Add wallet address
+      submitData.append('walletAddress', publicKey.toString())
 
-      // Redirect to success page or dashboard
-      router.push('/dashboard')
+      // Add form fields
+      Object.keys(formData).forEach(key => {
+        const value = formData[key]
+        if (value instanceof File) {
+          // Handle file uploads
+          submitData.append(key, value)
+        } else if (value !== undefined && value !== null) {
+          // Handle regular form fields
+          submitData.append(key, String(value))
+        }
+      })
+
+      console.log('Submitting property registration:', Object.fromEntries(submitData))
+
+      // Call API
+      const response = await apiService.createProperty(submitData)
+
+      if (response.success) {
+        console.log('Property registration successful:', response.data)
+        // Redirect to success page or dashboard
+        router.push('/dashboard?tab=properties')
+      } else {
+        console.error('Property registration failed:', response.error)
+        setSubmitError(response.error || 'Failed to register property')
+      }
     } catch (error) {
       console.error('Error submitting property registration:', error)
+      setSubmitError('Network error occurred. Please try again.')
     } finally {
       setIsSubmitting(false)
     }
@@ -142,6 +175,12 @@ const PropertyRegistrationPage: FC = () => {
 
         {/* Form */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+          {submitError && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-red-800 text-sm">{submitError}</p>
+            </div>
+          )}
+
           <PropertyForm
             currentStep={currentStep}
             onNext={handleNext}

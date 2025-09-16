@@ -37,15 +37,16 @@ const upload = multer({
 });
 
 // Get all properties for a user
-export const getProperties = async (req: Request, res: Response, next: NextFunction) => {
+export const getProperties = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { walletAddress } = req.query;
 
     if (!walletAddress || typeof walletAddress !== 'string') {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Wallet address is required'
       });
+      return;
     }
 
     // First, find or create user
@@ -54,11 +55,12 @@ export const getProperties = async (req: Request, res: Response, next: NextFunct
     });
 
     if (!user) {
-      return res.json({
+      res.json({
         success: true,
         data: [],
         message: 'No properties found for this wallet address'
       });
+      return;
     }
 
     // Get user's properties
@@ -91,7 +93,7 @@ export const getProperty = async (req: Request, res: Response, next: NextFunctio
     }
 
     const property = await prisma.property.findUnique({
-      where: { id },
+      where: { propertyId: id },
       include: {
         owner: {
           select: {
@@ -130,7 +132,7 @@ export const createProperty = [
     { name: 'environmentalReport', maxCount: 1 },
     { name: 'additionalDocs', maxCount: 10 }
   ]),
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const {
         walletAddress,
@@ -148,19 +150,21 @@ export const createProperty = [
 
       // Validate required fields
       if (!walletAddress || !propertyType || !address || !city || !state || !zipCode) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           error: 'Missing required fields'
         });
+        return;
       }
 
       // Validate property type
       const validPropertyTypes = ['OFFICE', 'RETAIL', 'INDUSTRIAL', 'MULTIFAMILY', 'HOSPITALITY', 'LAND', 'SPECIALTY'];
       if (!validPropertyTypes.includes(propertyType)) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           error: 'Invalid property type'
         });
+        return;
       }
 
       // Find or create user
@@ -234,14 +238,15 @@ export const createProperty = [
           entityId: property.id || '',
           userId: user.id,
           walletAddress: user.walletAddress,
-          newValues: {
+          oldValues: '',
+          newValues: JSON.stringify({
             propertyId,
             propertyType,
             address,
             city,
             state,
             appraisedValue
-          }
+          })
         }
       });
 
@@ -266,21 +271,30 @@ export const updateProperty = [
     { name: 'environmentalReport', maxCount: 1 },
     { name: 'additionalDocs', maxCount: 10 }
   ]),
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { id } = req.params;
       const updateData = req.body;
 
+      if (!id) {
+        res.status(400).json({
+          success: false,
+          error: 'Property ID is required'
+        });
+        return;
+      }
+
       // Get existing property
       const existingProperty = await prisma.property.findUnique({
-        where: { id }
+        where: { propertyId: id }
       });
 
       if (!existingProperty) {
-        return res.status(404).json({
+        res.status(404).json({
           success: false,
           error: 'Property not found'
         });
+        return;
       }
 
       // Prepare update data
@@ -305,7 +319,7 @@ export const updateProperty = [
 
       // Update property
       const updatedProperty = await prisma.property.update({
-        where: { id },
+        where: { propertyId: id },
         data: updateFields
       });
 
@@ -314,9 +328,11 @@ export const updateProperty = [
         data: {
           action: 'PROPERTY_UPDATED',
           entityType: 'Property',
-          entityId: id || '',
-          oldValues: existingProperty,
-          newValues: updateFields
+          entityId: id,
+          userId: existingProperty.ownerId,
+          walletAddress: '', // Would need to fetch from user table
+          oldValues: JSON.stringify(existingProperty),
+          newValues: JSON.stringify(updateFields)
         }
       });
 
@@ -332,24 +348,33 @@ export const updateProperty = [
 ];
 
 // Delete a property (soft delete by marking as inactive)
-export const deleteProperty = async (req: Request, res: Response, next: NextFunction) => {
+export const deleteProperty = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { id } = req.params;
 
+    if (!id) {
+      res.status(400).json({
+        success: false,
+        error: 'Property ID is required'
+      });
+      return;
+    }
+
     const property = await prisma.property.findUnique({
-      where: { id }
+      where: { propertyId: id }
     });
 
     if (!property) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Property not found'
       });
+      return;
     }
 
     // Instead of hard delete, mark as inactive
     const updatedProperty = await prisma.property.update({
-      where: { id },
+      where: { propertyId: id },
       data: {
         status: 'INACTIVE'
       }
@@ -361,7 +386,10 @@ export const deleteProperty = async (req: Request, res: Response, next: NextFunc
         action: 'PROPERTY_DELETED',
         entityType: 'Property',
         entityId: id,
-        oldValues: property
+        userId: property.ownerId,
+        walletAddress: '', // Would need to fetch from user table
+        oldValues: JSON.stringify(property),
+        newValues: JSON.stringify({ status: 'INACTIVE' })
       }
     });
 
@@ -375,15 +403,16 @@ export const deleteProperty = async (req: Request, res: Response, next: NextFunc
 };
 
 // Get property statistics
-export const getPropertyStats = async (req: Request, res: Response, next: NextFunction) => {
+export const getPropertyStats = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { walletAddress } = req.query;
 
     if (!walletAddress || typeof walletAddress !== 'string') {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Wallet address is required'
       });
+      return;
     }
 
     const user = await prisma.user.findUnique({
@@ -391,7 +420,7 @@ export const getPropertyStats = async (req: Request, res: Response, next: NextFu
     });
 
     if (!user) {
-      return res.json({
+      res.json({
         success: true,
         data: {
           totalProperties: 0,
@@ -400,6 +429,7 @@ export const getPropertyStats = async (req: Request, res: Response, next: NextFu
           pendingVerification: 0
         }
       });
+      return;
     }
 
     const properties = await prisma.property.findMany({

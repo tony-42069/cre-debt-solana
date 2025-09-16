@@ -3,15 +3,16 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
-export const getDashboardStats = async (req: Request, res: Response, next: NextFunction) => {
+export const getDashboardStats = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { walletAddress } = req.query
 
     if (!walletAddress || typeof walletAddress !== 'string') {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Wallet address is required'
       })
+      return
     }
 
     // Get user by wallet address
@@ -20,10 +21,11 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
     })
 
     if (!user) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'User not found'
       })
+      return
     }
 
     // Get properties count

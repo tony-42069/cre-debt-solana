@@ -2,3 +2,23 @@
 {"duration":"26ms","ip":"::1","level":"warn","message":"Request completed","method":"GET","service":"cre-debt-api","statusCode":404,"timestamp":"2025-08-29T02:22:30.835Z","url":"/"}
 {"ip":"::1","level":"info","message":"Request received","method":"GET","service":"cre-debt-api","timestamp":"2025-08-29T02:22:31.007Z","url":"/favicon.ico","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"}
 {"duration":"5ms","ip":"::1","level":"warn","message":"Request completed","method":"GET","service":"cre-debt-api","statusCode":404,"timestamp":"2025-08-29T02:22:31.013Z","url":"/"}
+{"level":"info","message":"🚀 CRE-Debt-Solana API server running on port 3001","service":"cre-debt-api","timestamp":"2025-08-30T02:08:09.868Z"}
+{"level":"info","message":"📚 API Documentation: http://localhost:3001/api-docs","service":"cre-debt-api","timestamp":"2025-08-30T02:08:09.875Z"}
+{"level":"info","message":"🌍 Environment: development","service":"cre-debt-api","timestamp":"2025-08-30T02:08:09.876Z"}
+{"level":"info","message":"🔗 Solana Cluster: devnet","service":"cre-debt-api","timestamp":"2025-08-30T02:08:09.877Z"}
+{"level":"info","message":"🚀 CRE-Debt-Solana API server running on port 3001","service":"cre-debt-api","timestamp":"2025-08-30T02:16:06.496Z"}
+{"level":"info","message":"📚 API Documentation: http://localhost:3001/api-docs","service":"cre-debt-api","timestamp":"2025-08-30T02:16:06.500Z"}
+{"level":"info","message":"🌍 Environment: development","service":"cre-debt-api","timestamp":"2025-08-30T02:16:06.501Z"}
+{"level":"info","message":"🔗 Solana Cluster: devnet","service":"cre-debt-api","timestamp":"2025-08-30T02:16:06.501Z"}
+{"level":"info","message":"🚀 CRE-Debt-Solana API server running on port 3001","service":"cre-debt-api","timestamp":"2025-08-30T02:16:23.453Z"}
+{"level":"info","message":"📚 API Documentation: http://localhost:3001/api-docs","service":"cre-debt-api","timestamp":"2025-08-30T02:16:23.457Z"}
+{"level":"info","message":"🌍 Environment: development","service":"cre-debt-api","timestamp":"2025-08-30T02:16:23.458Z"}
+{"level":"info","message":"🔗 Solana Cluster: devnet","service":"cre-debt-api","timestamp":"2025-08-30T02:16:23.458Z"}
+{"level":"info","message":"🚀 CRE-Debt-Solana API server running on port 3001","service":"cre-debt-api","timestamp":"2025-09-16T01:14:53.114Z"}
+{"level":"info","message":"📚 API Documentation: http://localhost:3001/api-docs","service":"cre-debt-api","timestamp":"2025-09-16T01:14:53.122Z"}
+{"level":"info","message":"🌍 Environment: development","service":"cre-debt-api","timestamp":"2025-09-16T01:14:53.123Z"}
+{"level":"info","message":"🔗 Solana Cluster: devnet","service":"cre-debt-api","timestamp":"2025-09-16T01:14:53.124Z"}
+{"ip":"::1","level":"info","message":"Request received","method":"GET","service":"cre-debt-api","timestamp":"2025-09-16T01:17:55.102Z","url":"/","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"}
+{"duration":"13ms","ip":"::1","level":"warn","message":"Request completed","method":"GET","service":"cre-debt-api","statusCode":404,"timestamp":"2025-09-16T01:17:55.114Z","url":"/"}
+{"ip":"::1","level":"info","message":"Request received","method":"GET","service":"cre-debt-api","timestamp":"2025-09-16T01:17:55.315Z","url":"/favicon.ico","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"}
+{"duration":"5ms","ip":"::1","level":"warn","message":"Request completed","method":"GET","service":"cre-debt-api","statusCode":404,"timestamp":"2025-09-16T01:17:55.319Z","url":"/"}

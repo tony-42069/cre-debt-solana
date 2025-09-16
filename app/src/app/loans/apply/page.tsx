@@ -6,12 +6,14 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import { LoanApplicationForm } from '@/components/forms/LoanApplicationForm'
 import { ArrowLeft, FileText, Calculator, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
+import { apiService } from '@/lib/api'
 
 const LoanApplicationPage: FC = () => {
-  const { connected } = useWallet()
+  const { connected, publicKey } = useWallet()
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const steps = [
     { id: 1, title: 'Property Selection', description: 'Choose property for loan' },
@@ -33,49 +35,49 @@ const LoanApplicationPage: FC = () => {
   }
 
   const handleSubmit = async (formData: any) => {
+    if (!publicKey) {
+      setSubmitError('Wallet not connected')
+      return
+    }
+
     setIsSubmitting(true)
+    setSubmitError(null)
+
     try {
-      const { publicKey } = useWallet()
-      const walletAddress = publicKey?.toBase58()
+      // Create FormData for multipart upload (in case there are file uploads)
+      const submitData = new FormData()
 
-      if (!walletAddress) {
-        throw new Error('Wallet not connected')
-      }
+      // Add wallet address
+      submitData.append('walletAddress', publicKey.toString())
 
-      // Prepare loan application data
-      const applicationData = {
-        ...formData,
-        walletAddress,
-        applicationId: `APP-${Date.now()}`,
-        status: 'DRAFT'
-      }
-
-      // Submit loan application
-      const response = await fetch('/api/loans', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(applicationData)
+      // Add form fields
+      Object.keys(formData).forEach(key => {
+        const value = formData[key]
+        if (value instanceof File) {
+          // Handle file uploads
+          submitData.append(key, value)
+        } else if (value !== undefined && value !== null) {
+          // Handle regular form fields
+          submitData.append(key, String(value))
+        }
       })
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to submit loan application')
-      }
+      console.log('Submitting loan application:', Object.fromEntries(submitData))
 
-      const result = await response.json()
+      // Call API
+      const response = await apiService.createLoanApplication(submitData)
 
-      if (result.success) {
+      if (response.success) {
+        console.log('Loan application submitted successfully:', response.data)
         // Redirect to dashboard with success message
-        router.push('/dashboard?application=success')
+        router.push('/dashboard?tab=loans')
       } else {
-        throw new Error(result.error || 'Failed to submit loan application')
+        console.error('Loan application failed:', response.error)
+        setSubmitError(response.error || 'Failed to submit loan application')
       }
     } catch (error) {
       console.error('Error submitting loan application:', error)
-      // In a real app, you'd show an error toast or modal here
-      alert(`Error submitting application: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      setSubmitError('Network error occurred. Please try again.')
     } finally {
       setIsSubmitting(false)
     }
@@ -173,6 +175,12 @@ const LoanApplicationPage: FC = () => {
 
         {/* Form */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+          {submitError && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-red-800 text-sm">{submitError}</p>
+            </div>
+          )}
+
           <LoanApplicationForm
             currentStep={currentStep}
             onNext={handleNext}

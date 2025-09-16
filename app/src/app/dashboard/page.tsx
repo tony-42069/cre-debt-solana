@@ -21,6 +21,7 @@ import {
 import { PaymentHistory } from '@/components/payments/PaymentHistory'
 import { PaymentSchedule } from '@/components/payments/PaymentSchedule'
 import Link from 'next/link'
+import { apiService } from '@/lib/api'
 
 interface DashboardStats {
   totalProperties: number
@@ -79,31 +80,22 @@ const DashboardPage: FC = () => {
 
       if (!walletAddress) return
 
-      // Fetch dashboard stats
-      const statsResponse = await fetch(`/api/dashboard/stats?walletAddress=${walletAddress}`)
-      if (statsResponse.ok) {
-        const statsData = await statsResponse.json()
-        if (statsData.success) {
-          setStats(statsData.data)
-        }
+      // Fetch dashboard stats using API service
+      const statsResponse = await apiService.getDashboardStats(walletAddress)
+      if (statsResponse.success) {
+        setStats(statsResponse.data)
       }
 
-      // Fetch properties
-      const propertiesResponse = await fetch(`/api/properties?walletAddress=${walletAddress}`)
-      if (propertiesResponse.ok) {
-        const propertiesData = await propertiesResponse.json()
-        if (propertiesData.success) {
-          setProperties(propertiesData.data)
-        }
+      // Fetch properties using API service
+      const propertiesResponse = await apiService.getProperties(walletAddress)
+      if (propertiesResponse.success) {
+        setProperties(propertiesResponse.data)
       }
 
-      // Fetch loan applications
-      const loansResponse = await fetch(`/api/loans?walletAddress=${walletAddress}`)
-      if (loansResponse.ok) {
-        const loansData = await loansResponse.json()
-        if (loansData.success) {
-          setLoanApplications(loansData.data)
-        }
+      // Fetch loan applications using API service
+      const loansResponse = await apiService.getLoanApplications(walletAddress)
+      if (loansResponse.success) {
+        setLoanApplications(loansResponse.data)
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error)

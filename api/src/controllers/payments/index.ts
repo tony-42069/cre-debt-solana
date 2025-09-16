@@ -3,15 +3,16 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
-export const processPayment = async (req: Request, res: Response, next: NextFunction) => {
+export const processPayment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { loanId, amount, paymentMethod, walletAddress, dueDate } = req.body
 
     if (!loanId || !amount || !paymentMethod || !walletAddress) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Missing required payment information'
       })
+      return
     }
 
     // Get user by wallet address
@@ -20,10 +21,11 @@ export const processPayment = async (req: Request, res: Response, next: NextFunc
     })
 
     if (!user) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'User not found'
       })
+      return
     }
 
     // Verify loan exists and belongs to user
@@ -35,18 +37,20 @@ export const processPayment = async (req: Request, res: Response, next: NextFunc
     })
 
     if (!loan) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Loan not found or access denied'
       })
+      return
     }
 
     // Check if payment amount is valid
     if (amount <= 0) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Invalid payment amount'
       })
+      return
     }
 
     // Generate transaction ID
@@ -63,10 +67,11 @@ export const processPayment = async (req: Request, res: Response, next: NextFunc
     })
 
     if (!paymentResult.success) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: paymentResult.error || 'Payment processing failed'
       })
+      return
     }
 
     // Create payment record
@@ -116,15 +121,16 @@ export const processPayment = async (req: Request, res: Response, next: NextFunc
   }
 }
 
-export const getPaymentHistory = async (req: Request, res: Response, next: NextFunction) => {
+export const getPaymentHistory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { walletAddress } = req.query
 
     if (!walletAddress || typeof walletAddress !== 'string') {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Wallet address is required'
       })
+      return
     }
 
     // Get user by wallet address
@@ -133,10 +139,11 @@ export const getPaymentHistory = async (req: Request, res: Response, next: NextF
     })
 
     if (!user) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'User not found'
       })
+      return
     }
 
     // Get payment history
@@ -177,15 +184,16 @@ export const getPaymentHistory = async (req: Request, res: Response, next: NextF
   }
 }
 
-export const getUpcomingPayments = async (req: Request, res: Response, next: NextFunction) => {
+export const getUpcomingPayments = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { walletAddress } = req.query
 
     if (!walletAddress || typeof walletAddress !== 'string') {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Wallet address is required'
       })
+      return
     }
 
     // Get user by wallet address
@@ -194,10 +202,11 @@ export const getUpcomingPayments = async (req: Request, res: Response, next: Nex
     })
 
     if (!user) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'User not found'
       })
+      return
     }
 
     // Get upcoming payments
