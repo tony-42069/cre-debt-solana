@@ -19,9 +19,16 @@
 //! and borrower-registry programs.
 
 mod utils;
+mod amortization;
 
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Token, TokenAccount};
+use crate::amortization::{
+    calculate_monthly_payment,
+    calculate_interest_portion,
+    generate_amortization_schedule,
+    validate_amortization_params,
+};
 
 declare_id!("H4Rdq9n8KJ9P8n7Fg6PaFpoGXkYsidMpWTK6W2BeZ7FE");
 
@@ -104,6 +111,14 @@ pub mod loan_core {
         loan.platform_config = platform_config.key();
         loan.borrower_registry = platform_config.borrower_registry;
         loan.property_registry = platform_config.property_registry;
+        loan.balloon_payment = loan_params.balloon_payment;
+        loan.monthly_payment = calculate_monthly_payment(
+            loan_params.principal_amount,
+            loan_params.interest_rate,
+            loan_params.term_months,
+        );
+        loan.payments_made = 0;
+        loan.accrued_interest = 0;
 
         emit!(LoanCreatedEvent {
             loan_id: loan.loan_id.clone(),
@@ -379,6 +394,10 @@ pub struct Loan {
     pub borrower_registry: Pubkey,
     pub last_payment_amount: Option<u64>,
     pub last_payment_date: Option<i64>,
+    pub balloon_payment: u64,
+    pub monthly_payment: u64,
+    pub payments_made: u16,
+    pub accrued_interest: u64,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Eq)]
@@ -415,6 +434,7 @@ pub struct LoanParams {
     pub principal_amount: u64,
     pub interest_rate: u16,
     pub term_months: u8,
+    pub balloon_payment: u64,
 }
 
 // Instruction contexts
@@ -693,5 +713,9 @@ impl Loan {
                                    32 +  // property_registry
                                    32 +  // borrower_registry
                                    9 +   // last_payment_amount (1 + 8)
-                                   9;    // last_payment_date (1 + 8)
+                                   9 +   // last_payment_date (1 + 8)
+                                   8 +   // balloon_payment
+                                   8 +   // monthly_payment
+                                   2 +   // payments_made
+                                   8;    // accrued_interest
 }
