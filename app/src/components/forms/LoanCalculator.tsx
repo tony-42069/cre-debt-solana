@@ -1,15 +1,31 @@
-'use client'
+'use client';
 
-import { FC, useState, useEffect } from 'react'
-import { Calculator, DollarSign, TrendingUp, Calendar, Percent } from 'lucide-react'
+import { FC, useMemo } from 'react';
+import {
+  Calculator,
+  DollarSign,
+  TrendingUp,
+  Calendar,
+  Percent,
+  PieChart,
+  BarChart3,
+} from 'lucide-react';
 
 interface LoanCalculatorProps {
-  propertyValue: number
-  requestedAmount: number
-  termMonths: number
-  interestRate: number
-  onAmountChange: (amount: number) => void
-  onTermChange: (termMonths: number) => void
+  propertyValue: number;
+  requestedAmount: number;
+  termMonths: number;
+  interestRate: number;
+  onAmountChange: (amount: number) => void;
+  onTermChange: (termMonths: number) => void;
+}
+
+interface PaymentSchedule {
+  month: number;
+  payment: number;
+  principal: number;
+  interest: number;
+  balance: number;
 }
 
 export const LoanCalculator: FC<LoanCalculatorProps> = ({
@@ -18,80 +34,92 @@ export const LoanCalculator: FC<LoanCalculatorProps> = ({
   termMonths,
   interestRate,
   onAmountChange,
-  onTermChange
+  onTermChange,
 }) => {
-  const [inputAmount, setInputAmount] = useState<string>(requestedAmount?.toString() || '')
-  const [inputTerm, setInputTerm] = useState<string>(termMonths?.toString() || '360')
-
-  useEffect(() => {
-    setInputAmount(requestedAmount?.toString() || '')
-  }, [requestedAmount])
-
-  useEffect(() => {
-    setInputTerm(termMonths?.toString() || '360')
-  }, [termMonths])
-
-  const handleAmountInputChange = (value: string) => {
-    setInputAmount(value)
-    const numValue = parseFloat(value) || 0
-    onAmountChange(numValue)
-  }
-
-  const handleTermInputChange = (value: string) => {
-    setInputTerm(value)
-    const numValue = parseInt(value) || 360
-    onTermChange(numValue)
-  }
-
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount)
-  }
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
 
-  // Calculate loan metrics
-  const maxLoanAmount = Math.floor(propertyValue * 0.9)
-  const ltvRatio = propertyValue > 0 ? (requestedAmount / propertyValue) * 100 : 0
-  const monthlyPayment = calculateMonthlyPayment(requestedAmount, interestRate, termMonths)
-  const totalPayments = monthlyPayment * termMonths
-  const totalInterest = totalPayments - requestedAmount
+  const calculateMonthlyPayment = (
+    principal: number,
+    annualRate: number,
+    months: number
+  ): number => {
+    if (principal <= 0 || months <= 0) return 0;
+    const monthlyRate = annualRate / 12;
+    return (
+      (principal * (monthlyRate * Math.pow(1 + monthlyRate, months))) /
+      (Math.pow(1 + monthlyRate, months) - 1)
+    );
+  };
 
-  function calculateMonthlyPayment(principal: number, annualRate: number, months: number): number {
-    if (principal <= 0 || months <= 0) return 0
-    const monthlyRate = annualRate / 12
-    return principal * (monthlyRate * Math.pow(1 + monthlyRate, months)) / (Math.pow(1 + monthlyRate, months) - 1)
-  }
+  const maxLoanAmount = Math.floor(propertyValue * 0.9);
+  const ltvRatio = propertyValue > 0 ? (requestedAmount / propertyValue) * 100 : 0;
+  const monthlyPayment = calculateMonthlyPayment(
+    requestedAmount,
+    interestRate,
+    termMonths
+  );
+  const totalPayments = monthlyPayment * termMonths;
+  const totalInterest = totalPayments - requestedAmount;
+
+  const paymentSchedule: PaymentSchedule[] = useMemo(() => {
+    const schedule: PaymentSchedule[] = [];
+    let balance = requestedAmount;
+    const monthlyRate = interestRate / 12;
+
+    for (let month = 1; month <= termMonths; month++) {
+      const interestPayment = balance * monthlyRate;
+      const principalPayment = monthlyPayment - interestPayment;
+      balance = Math.max(0, balance - principalPayment);
+
+      schedule.push({
+        month,
+        payment: monthlyPayment,
+        principal: principalPayment,
+        interest: interestPayment,
+        balance,
+      });
+
+      if (balance <= 0) break;
+    }
+
+    return schedule;
+  }, [requestedAmount, termMonths, interestRate, monthlyPayment]);
+
+  const principalPercentage =
+    requestedAmount > 0 ? (requestedAmount / totalPayments) * 100 : 0;
+  const interestPercentage =
+    requestedAmount > 0 ? (totalInterest / totalPayments) * 100 : 0;
 
   const quickAmounts = [
     { label: '50%', amount: Math.floor(propertyValue * 0.5) },
     { label: '70%', amount: Math.floor(propertyValue * 0.7) },
     { label: '80%', amount: Math.floor(propertyValue * 0.8) },
-    { label: '90%', amount: maxLoanAmount }
-  ]
+    { label: '90%', amount: maxLoanAmount },
+  ];
 
   const quickTerms = [
     { label: '5 Years', months: 60 },
     { label: '10 Years', months: 120 },
     { label: '15 Years', months: 180 },
-    { label: '30 Years', months: 360 }
-  ]
+    { label: '30 Years', months: 360 },
+  ];
 
   return (
     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
       <div className="flex items-center mb-6">
         <Calculator className="h-6 w-6 text-blue-600 mr-2" />
-        <h3 className="text-lg font-semibold text-gray-900">
-          Loan Calculator
-        </h3>
+        <h3 className="text-lg font-semibold text-gray-900">Loan Calculator</h3>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Input Section */}
         <div className="space-y-4">
-          {/* Property Value Display */}
           <div className="bg-white rounded-lg p-4 border border-gray-200">
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Property Value</span>
@@ -107,7 +135,6 @@ export const LoanCalculator: FC<LoanCalculatorProps> = ({
             </div>
           </div>
 
-          {/* Loan Amount Input */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Loan Amount
@@ -116,8 +143,10 @@ export const LoanCalculator: FC<LoanCalculatorProps> = ({
               <DollarSign className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
               <input
                 type="number"
-                value={inputAmount}
-                onChange={(e) => handleAmountInputChange(e.target.value)}
+                value={requestedAmount || ''}
+                onChange={(e) =>
+                  onAmountChange(parseFloat(e.target.value) || 0)
+                }
                 placeholder="Enter loan amount"
                 min="100000"
                 max={maxLoanAmount}
@@ -125,14 +154,12 @@ export const LoanCalculator: FC<LoanCalculatorProps> = ({
                 className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
               />
             </div>
-
-            {/* Quick Amount Buttons */}
             <div className="mt-2 flex flex-wrap gap-2">
               {quickAmounts.map((option) => (
                 <button
                   key={option.label}
                   type="button"
-                  onClick={() => handleAmountInputChange(option.amount.toString())}
+                  onClick={() => onAmountChange(option.amount)}
                   className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
                 >
                   {option.label} ({formatCurrency(option.amount)})
@@ -141,7 +168,6 @@ export const LoanCalculator: FC<LoanCalculatorProps> = ({
             </div>
           </div>
 
-          {/* Loan Term Input */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Loan Term (Months)
@@ -150,8 +176,10 @@ export const LoanCalculator: FC<LoanCalculatorProps> = ({
               <Calendar className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
               <input
                 type="number"
-                value={inputTerm}
-                onChange={(e) => handleTermInputChange(e.target.value)}
+                value={termMonths || ''}
+                onChange={(e) =>
+                  onTermChange(parseInt(e.target.value) || 360)
+                }
                 placeholder="360"
                 min="12"
                 max="360"
@@ -159,14 +187,12 @@ export const LoanCalculator: FC<LoanCalculatorProps> = ({
                 className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
               />
             </div>
-
-            {/* Quick Term Buttons */}
             <div className="mt-2 flex flex-wrap gap-2">
               {quickTerms.map((option) => (
                 <button
                   key={option.label}
                   type="button"
-                  onClick={() => handleTermInputChange(option.months.toString())}
+                  onClick={() => onTermChange(option.months)}
                   className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
                 >
                   {option.label}
@@ -176,78 +202,148 @@ export const LoanCalculator: FC<LoanCalculatorProps> = ({
           </div>
         </div>
 
-        {/* Results Section */}
         <div className="space-y-4">
           {requestedAmount > 0 && termMonths > 0 ? (
             <>
-              {/* LTV Ratio */}
               <div className="bg-white rounded-lg p-4 border border-blue-200">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <Percent className="h-5 w-5 text-blue-600 mr-2" />
-                    <span className="text-sm font-medium text-blue-900">LTV Ratio</span>
+                    <span className="text-sm font-medium text-blue-900">
+                      LTV Ratio
+                    </span>
                   </div>
-                  <span className={`text-lg font-bold ${
-                    ltvRatio <= 90 ? 'text-green-600' : 'text-red-600'
-                  }`}>
+                  <span
+                    className={`text-lg font-bold ${
+                      ltvRatio <= 90 ? 'text-green-600' : 'text-red-600'
+                    }`}
+                  >
                     {ltvRatio.toFixed(1)}%
                   </span>
                 </div>
-                {ltvRatio > 90 && (
-                  <p className="mt-2 text-xs text-red-600">
-                    LTV exceeds 90% maximum
-                  </p>
-                )}
+                <div className="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${
+                      ltvRatio <= 90 ? 'bg-green-500' : 'bg-red-500'
+                    }`}
+                    style={{ width: `${Math.min(ltvRatio, 100)}%` }}
+                  />
+                </div>
               </div>
 
-              {/* Monthly Payment */}
               <div className="bg-white rounded-lg p-4 border border-green-200">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <TrendingUp className="h-5 w-5 text-green-600 mr-2" />
-                    <span className="text-sm font-medium text-green-900">Monthly Payment</span>
+                    <span className="text-sm font-medium text-green-900">
+                      Monthly Payment
+                    </span>
                   </div>
                   <span className="text-xl font-bold text-green-700">
                     {formatCurrency(monthlyPayment)}
                   </span>
                 </div>
-                <p className="mt-1 text-xs text-green-700">
-                  Principal & Interest only
-                </p>
               </div>
 
-              {/* Payment Breakdown */}
               <div className="bg-white rounded-lg p-4 border border-gray-200">
-                <h4 className="text-sm font-medium text-gray-900 mb-3">Payment Breakdown</h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Loan Amount:</span>
-                    <span className="font-medium">{formatCurrency(requestedAmount)}</span>
+                <div className="flex items-center mb-3">
+                  <PieChart className="h-5 w-5 text-gray-600 mr-2" />
+                  <h4 className="text-sm font-medium text-gray-900">
+                    Payment Distribution
+                  </h4>
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-gray-600">Principal</span>
+                      <span className="font-medium">
+                        {formatCurrency(requestedAmount)} ({principalPercentage.toFixed(1)}%)
+                      </span>
+                    </div>
+                    <div className="h-3 bg-gray-200 rounded-full overflow-hidden flex">
+                      <div
+                        className="h-full bg-blue-500"
+                        style={{ width: `${principalPercentage}%` }}
+                      />
+                      <div
+                        className="h-full bg-orange-500"
+                        style={{ width: `${interestPercentage}%` }}
+                      />
+                    </div>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Total Interest:</span>
-                    <span className="font-medium">{formatCurrency(totalInterest)}</span>
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 bg-blue-500 rounded mr-2" />
+                      <span className="text-gray-600">Principal</span>
+                    </div>
+                    <span className="font-medium">
+                      {formatCurrency(requestedAmount)}
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Total Payments:</span>
-                    <span className="font-medium">{formatCurrency(totalPayments)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Interest Rate:</span>
-                    <span className="font-medium">{(interestRate * 100).toFixed(2)}% APR</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Term:</span>
-                    <span className="font-medium">{Math.floor(termMonths / 12)} years {termMonths % 12} months</span>
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 bg-orange-500 rounded mr-2" />
+                      <span className="text-gray-600">Interest</span>
+                    </div>
+                    <span className="font-medium">
+                      {formatCurrency(totalInterest)}
+                    </span>
                   </div>
                 </div>
               </div>
 
-              {/* Interest Rate Info */}
+              <div className="bg-white rounded-lg p-4 border border-gray-200">
+                <div className="flex items-center mb-3">
+                  <BarChart3 className="h-5 w-5 text-gray-600 mr-2" />
+                  <h4 className="text-sm font-medium text-gray-900">
+                    Amortization Preview (Year 1)
+                  </h4>
+                </div>
+                <div className="space-y-1">
+                  {paymentSchedule.slice(0, 12).map((pmt) => (
+                    <div
+                      key={pmt.month}
+                      className="flex items-center text-xs"
+                    >
+                      <span className="w-8 text-gray-500">
+                        M{pmt.month}
+                      </span>
+                      <div className="flex-1 h-4 flex rounded overflow-hidden">
+                        <div
+                          className="bg-blue-500"
+                          style={{
+                            width: `${(pmt.principal / monthlyPayment) * 100}%`,
+                          }}
+                        />
+                        <div
+                          className="bg-orange-500"
+                          style={{
+                            width: `${(pmt.interest / monthlyPayment) * 100}%`,
+                          }}
+                        />
+                      </div>
+                      <span className="w-20 text-right text-gray-600">
+                        {formatCurrency(pmt.balance)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 bg-blue-500 rounded mr-1" />
+                    Principal
+                  </div>
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 bg-orange-500 rounded mr-1" />
+                    Interest
+                  </div>
+                </div>
+              </div>
+
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                 <p className="text-xs text-yellow-800">
-                  <strong>Note:</strong> Interest rate shown is an estimate. Final rate will be determined
-                  after credit assessment and may vary based on your financial profile.
+                  <strong>Note:</strong> Interest rate shown is an estimate.
+                  Final rate will be determined after credit assessment.
                 </p>
               </div>
             </>
@@ -262,5 +358,5 @@ export const LoanCalculator: FC<LoanCalculatorProps> = ({
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
