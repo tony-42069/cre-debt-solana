@@ -18,6 +18,8 @@
 //! Uses proper CPI (Cross-Program Invocations) to interact with property-registry
 //! and borrower-registry programs.
 
+mod utils;
+
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Token, TokenAccount};
 
@@ -627,6 +629,27 @@ pub enum ErrorCode {
 
     #[msg("Cross-program invocation failed")]
     Cpifailed,
+
+    #[msg("Token account owner mismatch")]
+    TokenAccountOwnerMismatch,
+
+    #[msg("Token account mint mismatch")]
+    TokenAccountMintMismatch,
+
+    #[msg("Transfer amount too small")]
+    TransferAmountTooSmall,
+
+    #[msg("Transfer amount too large")]
+    TransferAmountTooLarge,
+
+    #[msg("Token account not initialized")]
+    TokenAccountNotInitialized,
+
+    #[msg("Insufficient token balance")]
+    InsufficientBalance,
+
+    #[msg("PDA derivation failed")]
+    PdaDerivationFailed,
 }
 
 // Account size calculations
