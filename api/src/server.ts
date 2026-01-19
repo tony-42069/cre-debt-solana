@@ -30,10 +30,45 @@ const app = express();
 
 // Security middleware
 app.use(helmet());
-app.use(cors({
-  origin: config.cors.origin,
-  credentials: true
-}));
+
+// CORS configuration with security enhancements
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) {
+      callback(null, true);
+      return;
+    }
+
+    // Get allowed origins from config or environment
+    const allowedOrigins = config.cors.origin
+      ? [config.cors.origin]
+      : ['http://localhost:3000', 'http://localhost:3001'];
+
+    // In development, allow all localhost origins
+    if (config.nodeEnv === 'development') {
+      if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+        callback(null, true);
+        return;
+      }
+    }
+
+    // Check if origin is allowed
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`CORS blocked origin: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Wallet-Address', 'X-Wallet-Signature', 'X-Wallet-Message'],
+  exposedHeaders: ['X-Request-Id'],
+  maxAge: 86400, // 24 hours
+  preflightContinue: false
+};
+app.use(cors(corsOptions));
 
 // Rate limiting
 const limiter = rateLimit({
