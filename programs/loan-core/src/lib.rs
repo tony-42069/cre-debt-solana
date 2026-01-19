@@ -321,6 +321,53 @@ pub mod loan_core {
 
         Ok(())
     }
+
+    /// View: Calculate monthly payment
+    pub fn calculate_monthly_payment(
+        principal: u64,
+        annual_rate_bps: u16,
+        term_months: u8,
+    ) -> Result<u64> {
+        Ok(calculate_monthly_payment(principal, annual_rate_bps, term_months))
+    }
+
+    /// View: Calculate interest portion
+    pub fn calculate_interest_portion(
+        outstanding_principal: u64,
+        annual_rate_bps: u16,
+        payment_amount: u64,
+    ) -> Result<u64> {
+        Ok(calculate_interest_portion(
+            outstanding_principal,
+            annual_rate_bps,
+            payment_amount,
+        ))
+    }
+
+    /// View: Get amortization schedule
+    pub fn get_amortization_schedule(
+        principal: u64,
+        annual_rate_bps: u16,
+        term_months: u8,
+        balloon_payment: u64,
+    ) -> Result<Vec<AmortizationScheduleEntry>> {
+        let schedule =
+            generate_amortization_schedule(principal, annual_rate_bps, term_months, balloon_payment);
+
+        let entries: Vec<AmortizationScheduleEntry> = schedule
+            .iter()
+            .map(|entry| AmortizationScheduleEntry {
+                payment_number: entry.payment_number,
+                payment_amount: entry.payment_amount,
+                principal_portion: entry.principal_portion,
+                interest_portion: entry.interest_portion,
+                outstanding_balance: entry.outstanding_balance,
+                is_balloon: entry.is_balloon,
+            })
+            .collect();
+
+        Ok(entries)
+    }
 }
 
 /// Calculate monthly payment using standard amortization formula
@@ -409,6 +456,16 @@ pub enum LoanStatus {
     Defaulted,
     Completed,
     Cancelled,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+pub struct AmortizationScheduleEntry {
+    pub payment_number: u16,
+    pub payment_amount: u64,
+    pub principal_portion: u64,
+    pub interest_portion: u64,
+    pub outstanding_balance: u64,
+    pub is_balloon: bool,
 }
 
 // Input structs
