@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
 // Program ID for Borrower Registry
-declare_id!("H4Rdq9n8KJ9P8n7Fg6PaFpoGXkYsidMpWTK6W2BeZ7FE");
+declare_id!("8g6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnU");
 
 #[program]
 pub mod borrower_registry {
