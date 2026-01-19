@@ -641,3 +641,103 @@ export const getLoanStats = async (req: Request, res: Response, next: NextFuncti
     next(error);
   }
 };
+
+// Fund approved loan (lender or platform action)
+export const fundLoanApplication = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { walletAddress, signature } = req.body;
+
+    if (!id) {
+      res.status(400).json({
+        success: false,
+        error: 'Loan ID is required'
+      });
+      return;
+    }
+
+    if (!walletAddress) {
+      res.status(400).json({
+        success: false,
+        error: 'Wallet address is required for verification'
+      });
+      return;
+    }
+
+    const loan = await prisma.loans.findUnique({
+      where: { id },
+      include: {
+        loan_applications: {
+          include: {
+            properties: true,
+            users: true
+          }
+        }
+      }
+    });
+
+    if (!loan) {
+      res.status(404).json({
+        success: false,
+        error: 'Loan not found'
+      });
+      return;
+    }
+
+    if (loan.status !== 'APPROVED') {
+      res.status(400).json({
+        success: false,
+        error: `Cannot fund loan with status: ${loan.status}. Only APPROVED loans can be funded.`
+      });
+      return;
+    }
+
+    await prisma.loans.update({
+      where: { id },
+      data: {
+        status: 'FUNDED',
+        fundedAt: new Date(),
+        remainingBalance: loan.principalAmount
+      }
+    });
+
+    await prisma.loan_applications.update({
+      where: { id: loan.applicationId },
+      data: {
+        status: 'FUNDED'
+      }
+    });
+
+    await prisma.properties.update({
+      where: { id: loan.loan_applications.propertyId },
+      data: {
+        status: 'ACTIVE'
+      }
+    });
+
+    await prisma.audit_logs.create({
+      data: {
+        action: 'LOAN_FUNDED',
+        entityType: 'Loan',
+        entityId: id,
+        userId: loan.borrowerId,
+        walletAddress,
+        oldValues: JSON.stringify({ status: 'APPROVED' }),
+        newValues: JSON.stringify({ status: 'FUNDED', fundedAt: new Date() })
+      } as any
+    });
+
+    res.json({
+      success: true,
+      data: {
+        loanId: loan.loanId,
+        status: 'FUNDED',
+        principalAmount: loan.principalAmount,
+        fundedAt: new Date()
+      },
+      message: 'Loan funded successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};

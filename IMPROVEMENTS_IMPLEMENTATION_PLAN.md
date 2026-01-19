@@ -124,47 +124,47 @@ This document outlines a structured plan to address all identified issues in the
 
 ### Task 3.1: Create /properties Page
 
-- [ ] Create `app/src/app/properties/page.tsx`
-- [ ] Implement property listing grid
-- [ ] Add search/filter functionality (by city, state, type, status)
-- [ ] Add pagination or infinite scroll
-- [ ] Connect to `GET /api/properties` endpoint
-- [ ] Add loading skeletons
-- [ ] Handle empty state
+- [x] Create `app/src/app/properties/page.tsx`
+- [x] Implement property listing grid
+- [x] Add search/filter functionality (by city, state, type, status)
+- [x] Add pagination or infinite scroll
+- [x] Connect to `GET /api/properties` endpoint
+- [x] Add loading skeletons
+- [x] Handle empty state
 
 ### Task 3.2: Create /properties/[id] Property Detail Page
 
-- [ ] Create `app/src/app/properties/[id]/page.tsx`
-- [ ] Display full property details (address, value, type, documents)
-- [ ] Show property valuation history
-- [ ] Add "Apply for Loan" CTA button
-- [ ] Display associated loan applications
-- [ ] Connect to `GET /api/properties/:id` endpoint
+- [x] Create `app/src/app/properties/[id]/page.tsx`
+- [x] Display full property details (address, value, type, documents)
+- [x] Show property valuation history
+- [x] Add "Apply for Loan" CTA button
+- [x] Display associated loan applications
+- [x] Connect to `GET /api/properties/:id` endpoint
 
 ### Task 3.3: Create /loans/[id] Loan Detail Page
 
-- [ ] Create `app/src/app/loans/[id]/page.tsx`
-- [ ] Display loan summary (amount, interest, term, status)
-- [ ] Show amortization schedule table
-- [ ] Display payment history
-- [ ] Add "Make Payment" button if active
-- [ ] Connect to `GET /api/loans/:id` endpoint
+- [x] Create `app/src/app/loans/[id]/page.tsx`
+- [x] Display loan summary (amount, interest, term, status)
+- [x] Show amortization schedule table
+- [x] Display payment history
+- [x] Add "Make Payment" button if active
+- [x] Connect to `GET /api/loans/:id` endpoint
 
 ### Task 3.4: Create /payments Page and Payment Form
 
-- [ ] Create `app/src/app/payments/page.tsx`
-- [ ] Implement `PaymentForm` component with full USDC payment flow
-- [ ] Connect to `POST /api/payments` endpoint
-- [ ] Add wallet signature for payment authorization
-- [ ] Show payment confirmation and receipt
+- [x] Create `app/src/app/payments/page.tsx`
+- [x] Implement `PaymentForm` component with full USDC payment flow
+- [x] Connect to `POST /api/payments` endpoint
+- [x] Add wallet signature for payment authorization
+- [x] Show payment confirmation and receipt
 
 ### Task 3.5: Add Missing API Endpoints
 
-- [ ] Implement `POST /api/borrowers` - Register new borrower
-- [ ] Implement `POST /api/loans/:id/fund` - Fund approved loan
-- [ ] Implement `POST /api/loans/:id/approve` - Admin approve endpoint
-- [ ] Implement `POST /api/loans/:id/reject` - Admin reject endpoint
-- [ ] Implement `GET /api/loans/stats` - Loan statistics
+- [x] Implement `POST /api/borrowers` - Register new borrower
+- [x] Implement `POST /api/loans/:id/fund` - Fund approved loan
+- [x] Implement `POST /api/loans/:id/approve` - Admin approve endpoint
+- [x] Implement `POST /api/loans/:id/reject` - Admin reject endpoint
+- [x] Implement `GET /api/loans/stats` - Loan statistics
 - [ ] Implement `GET /api/properties/stats` - Property statistics
 
 ### Task 3.6: Implement Blockchain Integration Layer
