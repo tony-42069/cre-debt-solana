@@ -16,7 +16,7 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
     }
 
     // Get user by wallet address
-    const user = await prisma.user.findUnique({
+    const user = await prisma.users.findUnique({
       where: { walletAddress }
     })
 
@@ -29,17 +29,17 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
     }
 
     // Get properties count
-    const totalProperties = await prisma.property.count({
+    const totalProperties = await prisma.properties.count({
       where: { ownerId: user.id }
     })
 
     // Get loan applications count
-    const totalLoans = await prisma.loanApplication.count({
+    const totalLoans = await prisma.loan_applications.count({
       where: { borrowerId: user.id }
     })
 
     // Get active loans count
-    const activeLoans = await prisma.loan.count({
+    const activeLoans = await prisma.loans.count({
       where: {
         borrowerId: user.id,
         status: {
@@ -49,7 +49,7 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
     })
 
     // Get total loan value
-    const loans = await prisma.loan.findMany({
+    const loans = await prisma.loans.findMany({
       where: {
         borrowerId: user.id,
         status: {
@@ -59,12 +59,12 @@ export const getDashboardStats = async (req: Request, res: Response, next: NextF
       select: { principalAmount: true }
     })
 
-    const totalLoanValue = loans.reduce((sum, loan) => sum + loan.principalAmount, 0)
+    const totalLoanValue = loans.reduce((sum: number, loan: { principalAmount: number }) => sum + loan.principalAmount, 0)
 
     // Get next payment due
-    const nextPayment = await prisma.payment.findFirst({
+    const nextPayment = await prisma.payments.findFirst({
       where: {
-        loan: {
+        loans: {
           borrowerId: user.id
         },
         status: 'PENDING',
