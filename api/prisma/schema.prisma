@@ -1,264 +1,171 @@
-// CRE-Debt-Solana Database Schema
-// Prisma schema for decentralized commercial real estate lending platform
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-// User/Borrower model - represents wallet-connected users
-model User {
-  id                String   @id @default(cuid())
-  walletAddress     String   @unique // Solana wallet address
-  email             String?  @unique
-  entityType        String   @default("INDIVIDUAL") // Individual, LLC, Corporation
-  kycStatus         String   @default("PENDING") // PENDING, SUBMITTED, APPROVED, REJECTED, EXPIRED
-  kycVerifiedAt     DateTime?
-  kycProvider       String?
-  riskScore         Int?     @default(500) // 0-1000 scale
-  totalBorrowed     Float    @default(0) // Total amount borrowed in USD
-  activeLoans       Int      @default(0)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  // Relations
-  properties        Property[]
-  loanApplications  LoanApplication[]
-  loans             Loan[]
-
-  @@map("users")
+model audit_logs {
+  id            String   @id
+  action        String
+  entityType    String
+  entityId      String
+  userId        String?
+  walletAddress String?
+  oldValues     String?
+  newValues     String?
+  metadata      String?
+  blockchainTx  String?
+  blockNumber   Int?
+  createdAt     DateTime @default(now())
 }
 
-// Property model - commercial real estate assets
-model Property {
-  id                String   @id @default(cuid())
-  propertyId        String   @unique // Unique property identifier
+model loan_applications {
+  id              String     @id
+  applicationId   String     @unique
+  borrowerId      String
+  propertyId      String
+  requestedAmount Float
+  interestRate    Float
+  termMonths      Int
+  ltvRatio        Float
+  status          String     @default("DRAFT")
+  submittedAt     DateTime?
+  reviewedAt      DateTime?
+  reviewedBy      String?
+  approvedAt      DateTime?
+  rejectedAt      DateTime?
+  rejectionReason String?
+  purpose         String?
+  additionalDocs  String?
+  notes           String?
+  blockchainTx    String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime
+  properties      properties @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  users           users      @relation(fields: [borrowerId], references: [id], onDelete: Cascade)
+  loans           loans?
+}
+
+model loans {
+  id                 String            @id
+  loanId             String            @unique
+  applicationId      String            @unique
+  borrowerId         String
+  principalAmount    Float
+  interestRate       Float
+  termMonths         Int
+  ltvRatio           Float
+  status             String            @default("PENDING")
+  fundedAt           DateTime?
+  maturityDate       DateTime
+  nextPaymentDue     DateTime?
+  totalPaid          Float             @default(0)
+  remainingBalance   Float
+  originationFee     Float             @default(0)
+  daysPastDue        Int               @default(0)
+  lastPaymentDate    DateTime?
+  defaultedAt        DateTime?
+  foreclosureStarted DateTime?
+  smartContractId    String?
+  blockchainTx       String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime
+  users              users             @relation(fields: [borrowerId], references: [id], onDelete: Cascade)
+  loan_applications  loan_applications @relation(fields: [applicationId], references: [id])
+  payments           payments[]
+}
+
+model payments {
+  id               String    @id
+  paymentId        String    @unique
+  loanId           String
+  amount           Float
+  paymentType      String    @default("PRINCIPAL")
+  paymentMethod    String    @default("USDC_TRANSFER")
+  principalPortion Float     @default(0)
+  interestPortion  Float     @default(0)
+  feePortion       Float     @default(0)
+  status           String    @default("PENDING")
+  processedAt      DateTime?
+  confirmedAt      DateTime?
+  dueDate          DateTime
+  paidDate         DateTime?
+  isLate           Boolean   @default(false)
+  lateFee          Float     @default(0)
+  blockchainTx     String?
+  blockNumber      Int?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime
+  loans            loans     @relation(fields: [loanId], references: [id], onDelete: Cascade)
+}
+
+model platform_config {
+  id                  String   @id
+  authorityWallet     String   @unique
+  treasuryWallet      String   @unique
+  tokenAccount        String   @unique
+  maxLtvRatio         Float    @default(0.9)
+  minLoanAmount       Float    @default(100000)
+  maxLoanAmount       Float    @default(10000000)
+  originationFee      Float    @default(0.01)
+  servicingFee        Float    @default(0.002)
+  minInterestRate     Float    @default(0.05)
+  maxInterestRate     Float    @default(0.15)
+  defaultInterestRate Float    @default(0.08)
+  gracePeriodDays     Int      @default(30)
+  lateFeeRate         Float    @default(0.05)
+  defaultThreshold    Int      @default(90)
+  isActive            Boolean  @default(true)
+  maintenanceMode     Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime
+}
+
+model properties {
+  id                String              @id
+  propertyId        String              @unique
   ownerId           String
-  owner             User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-
-  // Property details
-  propertyType      String   @default("OFFICE") // OFFICE, RETAIL, INDUSTRIAL, MULTIFAMILY, HOSPITALITY, LAND, SPECIALTY
+  propertyType      String              @default("OFFICE")
   address           String
   city              String
   state             String
   zipCode           String
-  country           String   @default("US")
-
-  // Valuation data
-  appraisedValue    Float // Property value in USD
-  ltvRatio          Float? // Loan-to-value ratio
+  country           String              @default("US")
+  appraisedValue    Float
+  ltvRatio          Float?
   valuationDate     DateTime
-  valuationMethod   String   @default("APPRAISAL") // APPRAISAL, AVM, INCOME, SALES_COMPARISON, COST_APPROACH
+  valuationMethod   String              @default("APPRAISAL")
   valuationProvider String
-  valuationReport   String? // IPFS hash of valuation report
-
-  // Property status
-  status            String   @default("DRAFT") // DRAFT, SUBMITTED, UNDER_REVIEW, VERIFIED, REJECTED, ACTIVE, INACTIVE
-  verified          Boolean @default(false)
+  valuationReport   String?
+  status            String              @default("DRAFT")
+  verified          Boolean             @default(false)
   verifiedAt        DateTime?
   verifiedBy        String?
-
-  // Blockchain data
-  blockchainTx      String? // Property registration transaction
-  smartContractId   String? // Property registry contract ID
-
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  // Relations
-  loanApplications  LoanApplication[]
-
-  @@map("properties")
-}
-
-// Loan Application model - loan request submissions
-model LoanApplication {
-  id                String   @id @default(cuid())
-  applicationId     String   @unique // Unique application identifier
-  borrowerId        String
-  borrower          User     @relation(fields: [borrowerId], references: [id], onDelete: Cascade)
-
-  propertyId        String
-  property          Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-
-  // Loan terms
-  requestedAmount   Float // Requested loan amount in USD
-  interestRate      Float // Annual interest rate (e.g., 0.08 for 8%)
-  termMonths        Int // Loan term in months
-  ltvRatio          Float // Requested LTV ratio
-
-  // Application status
-  status            String   @default("DRAFT") // DRAFT, SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED, CANCELLED
-  submittedAt       DateTime?
-  reviewedAt        DateTime?
-  reviewedBy        String?
-  approvedAt        DateTime?
-  rejectedAt        DateTime?
-  rejectionReason   String?
-
-  // Additional data
-  purpose           String? // Loan purpose description
-  additionalDocs    String? // IPFS hash of additional documents
-  notes             String?
-
-  // Blockchain data
-  blockchainTx      String? // Application submission transaction
-
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  // Relations
-  loan              Loan?
-
-  @@map("loan_applications")
-}
-
-// Loan model - active loan agreements
-model Loan {
-  id                String   @id @default(cuid())
-  loanId            String   @unique // Unique loan identifier
-  applicationId     String   @unique
-  application       LoanApplication @relation(fields: [applicationId], references: [id])
-
-  borrowerId        String
-  borrower          User     @relation(fields: [borrowerId], references: [id], onDelete: Cascade)
-
-  // Loan terms (final approved terms)
-  principalAmount   Float // Loan principal in USD
-  interestRate      Float // Annual interest rate
-  termMonths        Int // Loan term in months
-  ltvRatio          Float // Final LTV ratio
-
-  // Loan status and lifecycle
-  status            String   @default("PENDING") // PENDING, APPROVED, FUNDED, ACTIVE, DELINQUENT, DEFAULTED, COMPLETED, CANCELLED
-  fundedAt          DateTime?
-  maturityDate      DateTime
-  nextPaymentDue    DateTime?
-
-  // Financial tracking
-  totalPaid         Float @default(0) // Total payments made
-  remainingBalance  Float // Current outstanding balance
-  originationFee    Float @default(0) // Origination fee charged
-
-  // Default and delinquency tracking
-  daysPastDue       Int @default(0)
-  lastPaymentDate   DateTime?
-  defaultedAt       DateTime?
-  foreclosureStarted DateTime?
-
-  // Blockchain data
-  smartContractId   String? // Loan core contract ID
-  blockchainTx      String? // Loan funding transaction
-
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  // Relations
-  payments          Payment[]
-
-  @@map("loans")
-}
-
-// Payment model - loan payment records
-model Payment {
-  id                String   @id @default(cuid())
-  paymentId         String   @unique // Unique payment identifier
-  loanId            String
-  loan              Loan     @relation(fields: [loanId], references: [id], onDelete: Cascade)
-
-  // Payment details
-  amount            Float // Payment amount in USD
-  paymentType       String   @default("PRINCIPAL") // PRINCIPAL, INTEREST, FEE, LATE_FEE, PREPAYMENT, FULL_PAYMENT
-  paymentMethod     String   @default("USDC_TRANSFER") // USDC_TRANSFER, WIRE_TRANSFER, ACH, CHECK
-
-  // Payment breakdown
-  principalPortion  Float @default(0)
-  interestPortion   Float @default(0)
-  feePortion        Float @default(0)
-
-  // Payment status
-  status            String   @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED, CANCELLED
-  processedAt       DateTime?
-  confirmedAt       DateTime?
-
-  // Due dates
-  dueDate           DateTime
-  paidDate          DateTime?
-
-  // Late payment tracking
-  isLate            Boolean @default(false)
-  lateFee           Float @default(0)
-
-  // Blockchain data
-  blockchainTx      String? // Payment transaction hash
-  blockNumber       Int?
-
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  @@map("payments")
-}
-
-// Platform Configuration model - system-wide settings
-model PlatformConfig {
-  id                String   @id @default(cuid())
-
-  // Platform authority
-  authorityWallet   String   @unique
-  treasuryWallet    String   @unique
-  tokenAccount      String   @unique
-
-  // Loan parameters
-  maxLtvRatio       Float @default(0.9) // Maximum 90% LTV
-  minLoanAmount     Float @default(100000) // Minimum $100K
-  maxLoanAmount     Float @default(10000000) // Maximum $10M
-  originationFee    Float @default(0.01) // 1% origination fee
-  servicingFee      Float @default(0.002) // 0.2% servicing fee
-
-  // Interest rate ranges
-  minInterestRate   Float @default(0.05) // 5% minimum
-  maxInterestRate   Float @default(0.15) // 15% maximum
-  defaultInterestRate Float @default(0.08) // 8% default
-
-  // Risk parameters
-  gracePeriodDays   Int @default(30)
-  lateFeeRate       Float @default(0.05) // 5% late fee
-  defaultThreshold  Int @default(90) // Days past due for default
-
-  // Platform status
-  isActive          Boolean @default(true)
-  maintenanceMode   Boolean @default(false)
-
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  @@map("platform_config")
-}
-
-// Audit Log model - system activity tracking
-model AuditLog {
-  id                String   @id @default(cuid())
-  action            String // Action performed
-  entityType        String // User, Property, Loan, etc.
-  entityId          String // ID of the affected entity
-  userId            String? // User who performed the action
-  walletAddress     String? // Wallet address involved
-
-  // Action details
-  oldValues         String? // Previous values (for updates) - JSON string
-  newValues         String? // New values (for updates/creates) - JSON string
-  metadata          String? // Additional context - JSON string
-
-  // Blockchain context
   blockchainTx      String?
-  blockNumber       Int?
+  smartContractId   String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime
+  loan_applications loan_applications[]
+  users             users               @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+}
 
-  // Timestamps
-  createdAt         DateTime @default(now())
-
-  @@map("audit_logs")
+model users {
+  id                String              @id
+  walletAddress     String              @unique
+  email             String?             @unique
+  entityType        String              @default("INDIVIDUAL")
+  kycStatus         String              @default("PENDING")
+  kycVerifiedAt     DateTime?
+  kycProvider       String?
+  riskScore         Int?                @default(500)
+  totalBorrowed     Float               @default(0)
+  activeLoans       Int                 @default(0)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime
+  loan_applications loan_applications[]
+  loans             loans[]
+  properties        properties[]
 }

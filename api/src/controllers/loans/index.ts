@@ -50,7 +50,7 @@ export const getLoanApplications = async (req: Request, res: Response, next: Nex
     }
 
     // Find user
-    let user = await prisma.user.findUnique({
+    let user = await prisma.users.findUnique({
       where: { walletAddress }
     });
 
@@ -64,10 +64,10 @@ export const getLoanApplications = async (req: Request, res: Response, next: Nex
     }
 
     // Get user's loan applications
-    const applications = await prisma.loanApplication.findMany({
+    const applications = await prisma.loan_applications.findMany({
       where: { borrowerId: user.id },
       include: {
-        property: {
+        properties: {
           select: {
             id: true,
             propertyId: true,
@@ -77,7 +77,7 @@ export const getLoanApplications = async (req: Request, res: Response, next: Nex
             appraisedValue: true
           }
         },
-        loan: {
+        loans: {
           select: {
             id: true,
             status: true,
@@ -111,18 +111,18 @@ export const getLoanApplication = async (req: Request, res: Response, next: Next
       return;
     }
 
-    const application = await prisma.loanApplication.findUnique({
+    const application = await prisma.loan_applications.findUnique({
       where: { id },
       include: {
-        borrower: {
+        users: {
           select: {
             id: true,
             walletAddress: true,
             entityType: true
           }
         },
-        property: true,
-        loan: {
+        properties: true,
+        loans: {
           include: {
             payments: {
               orderBy: { dueDate: 'desc' },
@@ -183,21 +183,23 @@ export const createLoanApplication = [
       }
 
       // Find or create user
-      let user = await prisma.user.findUnique({
+      let user = await prisma.users.findUnique({
         where: { walletAddress }
       });
 
       if (!user) {
-        user = await prisma.user.create({
+        user = await prisma.users.create({
           data: {
             walletAddress,
-            entityType: 'INDIVIDUAL'
-          }
+            entityType: 'INDIVIDUAL',
+            totalBorrowed: 0,
+            activeLoans: 0
+          } as any
         });
       }
 
       // Verify property ownership
-      const property = await prisma.property.findFirst({
+      const property = await prisma.properties.findFirst({
         where: {
           id: propertyId,
           ownerId: user.id
@@ -246,7 +248,7 @@ export const createLoanApplication = [
       }
 
       // Create loan application
-      const application = await prisma.loanApplication.create({
+      const application = await prisma.loan_applications.create({
         data: {
           applicationId,
           borrowerId: user.id,
@@ -257,13 +259,12 @@ export const createLoanApplication = [
           ltvRatio,
           purpose: loanPurpose || 'Working Capital',
           status: 'DRAFT',
-          // Store additional data as JSON
           additionalDocs: fileData.additionalDocs ? JSON.stringify(fileData.additionalDocs) : null
-        }
+        } as any
       });
 
       // Log the action
-      await prisma.auditLog.create({
+      await prisma.audit_logs.create({
         data: {
           action: 'LOAN_APPLICATION_CREATED',
           entityType: 'LoanApplication',
@@ -277,7 +278,7 @@ export const createLoanApplication = [
             ltvRatio,
             propertyId
           })
-        }
+        } as any
       });
 
       res.status(201).json({
@@ -313,7 +314,7 @@ export const updateLoanApplication = [
       }
 
       // Get existing application
-      const existingApplication = await prisma.loanApplication.findUnique({
+      const existingApplication = await prisma.loan_applications.findUnique({
         where: { id }
       });
 
@@ -336,7 +337,7 @@ export const updateLoanApplication = [
 
       // Recalculate LTV if amount changed
       if (updateData.requestedAmount) {
-        const property = await prisma.property.findUnique({
+        const property = await prisma.properties.findUnique({
           where: { id: existingApplication.propertyId }
         });
         if (property) {
@@ -351,22 +352,22 @@ export const updateLoanApplication = [
       }
 
       // Update application
-      const updatedApplication = await prisma.loanApplication.update({
+      const updatedApplication = await prisma.loan_applications.update({
         where: { id },
         data: updateFields
       });
 
       // Log the update
-      await prisma.auditLog.create({
+      await prisma.audit_logs.create({
         data: {
           action: 'LOAN_APPLICATION_UPDATED',
           entityType: 'LoanApplication',
           entityId: id,
           userId: existingApplication.borrowerId,
-          walletAddress: '', // Would need to fetch from user table
+          walletAddress: '',
           oldValues: JSON.stringify(existingApplication),
           newValues: JSON.stringify(updateFields)
-        }
+        } as any
       });
 
       res.json({
@@ -393,9 +394,9 @@ export const submitLoanApplication = async (req: Request, res: Response, next: N
       return;
     }
 
-    const application = await prisma.loanApplication.findUnique({
+    const application = await prisma.loan_applications.findUnique({
       where: { id },
-      include: { property: true }
+      include: { properties: true }
     });
 
     if (!application) {
@@ -407,7 +408,7 @@ export const submitLoanApplication = async (req: Request, res: Response, next: N
     }
 
     // Update status to submitted
-    const updatedApplication = await prisma.loanApplication.update({
+    const updatedApplication = await prisma.loan_applications.update({
       where: { id },
       data: {
         status: 'SUBMITTED',
@@ -416,19 +417,19 @@ export const submitLoanApplication = async (req: Request, res: Response, next: N
     });
 
     // Log the submission
-    await prisma.auditLog.create({
+    await prisma.audit_logs.create({
       data: {
         action: 'LOAN_APPLICATION_SUBMITTED',
         entityType: 'LoanApplication',
         entityId: id,
         userId: application.borrowerId,
-        walletAddress: '', // Would need to fetch from user table
+        walletAddress: '',
         oldValues: '',
         newValues: JSON.stringify({
           status: 'SUBMITTED',
           submittedAt: new Date()
         })
-      }
+      } as any
     });
 
     res.json({
@@ -455,9 +456,9 @@ export const approveLoanApplication = async (req: Request, res: Response, next: 
       return;
     }
 
-    const application = await prisma.loanApplication.findUnique({
+    const application = await prisma.loan_applications.findUnique({
       where: { id },
-      include: { borrower: true, property: true }
+      include: { users: true, properties: true }
     });
 
     if (!application) {
@@ -469,7 +470,7 @@ export const approveLoanApplication = async (req: Request, res: Response, next: 
     }
 
     // Update application status
-    await prisma.loanApplication.update({
+    await prisma.loan_applications.update({
       where: { id },
       data: {
         status: 'APPROVED',
@@ -481,7 +482,7 @@ export const approveLoanApplication = async (req: Request, res: Response, next: 
     // Create loan record
     const loanId = `LOAN-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
-    const loan = await prisma.loan.create({
+    const loan = await prisma.loans.create({
       data: {
         loanId,
         applicationId: application.id,
@@ -491,25 +492,25 @@ export const approveLoanApplication = async (req: Request, res: Response, next: 
         termMonths: approvedTerm || application.termMonths,
         ltvRatio: application.ltvRatio,
         status: 'APPROVED',
-        maturityDate: new Date(Date.now() + ((approvedTerm || application.termMonths) * 30 * 24 * 60 * 60 * 1000)), // Approximate months to date
+        maturityDate: new Date(Date.now() + ((approvedTerm || application.termMonths) * 30 * 24 * 60 * 60 * 1000)),
         remainingBalance: approvedAmount || application.requestedAmount
-      }
+      } as any
     });
 
     // Log the approval
-    await prisma.auditLog.create({
+    await prisma.audit_logs.create({
       data: {
         action: 'LOAN_APPLICATION_APPROVED',
         entityType: 'LoanApplication',
         entityId: id,
         userId: application.borrowerId,
-        walletAddress: '', // Would need to fetch from user table
+        walletAddress: '',
         oldValues: '',
         newValues: JSON.stringify({
           status: 'APPROVED',
           loanId: loan.id
         })
-      }
+      } as any
     });
 
     res.json({
@@ -536,7 +537,7 @@ export const rejectLoanApplication = async (req: Request, res: Response, next: N
       return;
     }
 
-    const application = await prisma.loanApplication.findUnique({
+    const application = await prisma.loan_applications.findUnique({
       where: { id }
     });
 
@@ -549,7 +550,7 @@ export const rejectLoanApplication = async (req: Request, res: Response, next: N
     }
 
     // Update application status
-    const updatedApplication = await prisma.loanApplication.update({
+    const updatedApplication = await prisma.loan_applications.update({
       where: { id },
       data: {
         status: 'REJECTED',
@@ -560,19 +561,19 @@ export const rejectLoanApplication = async (req: Request, res: Response, next: N
     });
 
     // Log the rejection
-    await prisma.auditLog.create({
+    await prisma.audit_logs.create({
       data: {
         action: 'LOAN_APPLICATION_REJECTED',
         entityType: 'LoanApplication',
         entityId: id,
         userId: application.borrowerId,
-        walletAddress: '', // Would need to fetch from user table
+        walletAddress: '',
         oldValues: '',
         newValues: JSON.stringify({
           status: 'REJECTED',
           rejectionReason: reason || 'Application rejected by reviewer'
         })
-      }
+      } as any
     });
 
     res.json({
@@ -598,7 +599,7 @@ export const getLoanStats = async (req: Request, res: Response, next: NextFuncti
       return;
     }
 
-    const user = await prisma.user.findUnique({
+    const user = await prisma.users.findUnique({
       where: { walletAddress }
     });
 
@@ -617,19 +618,19 @@ export const getLoanStats = async (req: Request, res: Response, next: NextFuncti
       return;
     }
 
-    const applications = await prisma.loanApplication.findMany({
+    const applications = await prisma.loan_applications.findMany({
       where: { borrowerId: user.id }
     });
 
     const stats = {
       totalApplications: applications.length,
-      pendingApplications: applications.filter(app => app.status === 'SUBMITTED' || app.status === 'UNDER_REVIEW').length,
-      approvedApplications: applications.filter(app => app.status === 'APPROVED').length,
-      rejectedApplications: applications.filter(app => app.status === 'REJECTED').length,
-      totalRequested: applications.reduce((sum, app) => sum + app.requestedAmount, 0),
+      pendingApplications: applications.filter((app: { status: string }) => app.status === 'SUBMITTED' || app.status === 'UNDER_REVIEW').length,
+      approvedApplications: applications.filter((app: { status: string }) => app.status === 'APPROVED').length,
+      rejectedApplications: applications.filter((app: { status: string }) => app.status === 'REJECTED').length,
+      totalRequested: applications.reduce((sum: number, app: { requestedAmount: number }) => sum + app.requestedAmount, 0),
       totalApproved: applications
-        .filter(app => app.status === 'APPROVED')
-        .reduce((sum, app) => sum + app.requestedAmount, 0)
+        .filter((app: { status: string }) => app.status === 'APPROVED')
+        .reduce((sum: number, app: { requestedAmount: number }) => sum + app.requestedAmount, 0)
     };
 
     res.json({

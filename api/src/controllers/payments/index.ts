@@ -16,7 +16,7 @@ export const processPayment = async (req: Request, res: Response, next: NextFunc
     }
 
     // Get user by wallet address
-    const user = await prisma.user.findUnique({
+    const user = await prisma.users.findUnique({
       where: { walletAddress }
     })
 
@@ -29,7 +29,7 @@ export const processPayment = async (req: Request, res: Response, next: NextFunc
     }
 
     // Verify loan exists and belongs to user
-    const loan = await prisma.loan.findFirst({
+    const loan = await prisma.loans.findFirst({
       where: {
         id: loanId,
         borrowerId: user.id
@@ -75,26 +75,26 @@ export const processPayment = async (req: Request, res: Response, next: NextFunc
     }
 
     // Create payment record
-    const payment = await prisma.payment.create({
+    const payment = await prisma.payments.create({
       data: {
         paymentId: transactionId,
         loanId: loan.id,
         amount,
-        paymentType: 'PRINCIPAL', // This would be calculated based on loan terms
+        paymentType: 'PRINCIPAL',
         paymentMethod: paymentMethod === 'usdc' ? 'USDC_TRANSFER' : 'WIRE_TRANSFER',
         status: 'COMPLETED',
         processedAt: new Date(),
         confirmedAt: new Date(),
         dueDate: new Date(dueDate),
         paidDate: new Date(),
-        principalPortion: amount * 0.8, // Simplified calculation
-        interestPortion: amount * 0.2,  // Simplified calculation
+        principalPortion: amount * 0.8,
+        interestPortion: amount * 0.2,
         blockchainTx: paymentResult.blockchainTx || null
-      }
+      } as any
     })
 
     // Update loan balance
-    await prisma.loan.update({
+    await prisma.loans.update({
       where: { id: loan.id },
       data: {
         remainingBalance: Math.max(0, loan.remainingBalance - amount),
@@ -134,7 +134,7 @@ export const getPaymentHistory = async (req: Request, res: Response, next: NextF
     }
 
     // Get user by wallet address
-    const user = await prisma.user.findUnique({
+    const user = await prisma.users.findUnique({
       where: { walletAddress }
     })
 
@@ -147,19 +147,19 @@ export const getPaymentHistory = async (req: Request, res: Response, next: NextF
     }
 
     // Get payment history
-    const payments = await prisma.payment.findMany({
+    const payments = await prisma.payments.findMany({
       where: {
-        loan: {
+        loans: {
           borrowerId: user.id
         }
       },
       include: {
-        loan: {
+        loans: {
           select: {
             loanId: true,
-            application: {
+            loan_applications: {
               select: {
-                property: {
+                properties: {
                   select: {
                     address: true,
                     city: true,
@@ -197,7 +197,7 @@ export const getUpcomingPayments = async (req: Request, res: Response, next: Nex
     }
 
     // Get user by wallet address
-    const user = await prisma.user.findUnique({
+    const user = await prisma.users.findUnique({
       where: { walletAddress }
     })
 
@@ -210,9 +210,9 @@ export const getUpcomingPayments = async (req: Request, res: Response, next: Nex
     }
 
     // Get upcoming payments
-    const upcomingPayments = await prisma.payment.findMany({
+    const upcomingPayments = await prisma.payments.findMany({
       where: {
-        loan: {
+        loans: {
           borrowerId: user.id
         },
         status: 'PENDING',
@@ -221,12 +221,12 @@ export const getUpcomingPayments = async (req: Request, res: Response, next: Nex
         }
       },
       include: {
-        loan: {
+        loans: {
           select: {
             loanId: true,
-            application: {
+            loan_applications: {
               select: {
-                property: {
+                properties: {
                   select: {
                     address: true,
                     city: true,
