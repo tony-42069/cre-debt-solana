@@ -7,6 +7,7 @@ import {
   submitLoanApplication,
   approveLoanApplication,
   rejectLoanApplication,
+  fundLoanApplication,
   getLoanStats
 } from '../../controllers/loans/index';
 
@@ -35,5 +36,8 @@ router.post('/:id/approve', approveLoanApplication);
 
 // Reject loan application
 router.post('/:id/reject', rejectLoanApplication);
+
+// Fund approved loan
+router.post('/:id/fund', fundLoanApplication);
 
 export default router;

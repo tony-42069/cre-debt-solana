@@ -143,6 +143,33 @@ class ApiService {
   async getUpcomingPayments(walletAddress: string): Promise<ApiResponse> {
     return this.request(`/api/payments/upcoming?walletAddress=${walletAddress}`)
   }
+
+  // Borrower API methods
+  async getBorrower(walletAddress: string): Promise<ApiResponse> {
+    return this.request(`/api/borrowers/wallet/${walletAddress}`)
+  }
+
+  async createBorrower(borrowerData: {
+    walletAddress: string
+    entityType: string
+    firstName: string
+    lastName: string
+    email?: string
+    phone?: string
+    companyName?: string
+  }): Promise<ApiResponse> {
+    return this.request('/api/borrowers', {
+      method: 'POST',
+      body: JSON.stringify(borrowerData),
+    })
+  }
+
+  async updateBorrowerKyc(borrowerId: string, kycStatus: string, kycProvider?: string): Promise<ApiResponse> {
+    return this.request(`/api/borrowers/${borrowerId}/kyc`, {
+      method: 'PUT',
+      body: JSON.stringify({ kycStatus, kycProvider }),
+    })
+  }
 }
 
 // Export singleton instance
