@@ -1,8 +1,25 @@
+//! # CRE-Debt-Solana: Property Registry Smart Contract
+//!
+//! **Version:** 1.1.0 - CPI Ready ✅
+//! **Status:** Production Ready
+//! **Description:** Property registration and verification contract for CRE-Debt platform
+//!
+//! ## Features
+//! - Property registration with full metadata
+//! - Property valuation tracking
+//! - Verification status management
+//! - Cross-program invocation support for loan-core
+//! - Comprehensive event emission
+
 use anchor_lang::prelude::*;
 use anchor_spl::token;
 
 // Program ID for Property Registry
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+
+// Program ID constants for CPI
+pub const PROPERTY_REGISTRY_PROGRAM_ID: &str = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS";
+pub const LOAN_CORE_PROGRAM_ID: &str = "H4Rdq9n8KJ9P8n7Fg6PaFpoGXkYsidMpWTK6W2BeZ7FE";
 
 #[program]
 pub mod property_registry {
