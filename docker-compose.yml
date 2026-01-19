@@ -1,10 +1,115 @@
 version: '3.8'
+
 services:
   postgres:
-    image: postgres:14
+    image: postgres:15-alpine
+    container_name: cre-debt-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-credebt}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-cre_debt}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-credebt}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: cre-debt-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    container_name: cre-debt-api
     environment:
-      POSTGRES_USER: dev
-      POSTGRES_PASSWORD: secret
-      POSTGRES_DB: cre_debt
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: ${API_PORT:-4000}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-credebt}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-cre_debt}?schema=public
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:-your-jwt-secret-change-in-production}
+      SOLANA_CLUSTER: ${SOLANA_CLUSTER:-devnet}
+      SOLANA_RPC_URL: ${SOLANA_RPC_URL:-https://api.devnet.solana.com}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+    ports:
+      - "${API_PORT:-4000}:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./api/logs:/app/logs
+      - ./api/uploads:/app/uploads
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    container_name: cre-debt-frontend
+    environment:
+      NEXT_PUBLIC_API_URL: ${API_URL:-http://localhost:4000}
+      NEXT_PUBLIC_SOLANA_CLUSTER: ${SOLANA_CLUSTER:-devnet}
+      NEXT_PUBLIC_SOLANA_RPC_URL: ${SOLANA_RPC_URL:-https://api.devnet.solana.com}
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  solana-validator:
+    image: solanalabs/solana:v1.18.18
+    container_name: cre-debt-solana
+    environment:
+      SOLANA_RPC_PORT: 8899
+      SOLANA_PUBSUB_PORT: 8900
+      SOLANA_JSON_RPC_URL: http://localhost:8899
+      VALIDATOR_PORT: 8001
+      METRICS_PORT: 9090
+    ports:
+      - "8899:8899"
+      - "8900:8900"
+      - "8001:8001"
+      - "9090:9090"
+    command: |
+      solana-validator
+        --identity /config/validator-keypair.json
+        --vote-account /config/vote-account-keypair.json
+        --rpc-port 8899
+        --gossip-port 8001
+        --metrics-port 9090
+        --ledger /ledger
+        --rpc
+        --enable-rpc-transaction-history
+        --full-rpc-api
+        --no-poh-speed-test
+        --no-os-network-limits-test
+    volumes:
+      - solana_ledger:/ledger
+      - solana_config:/config
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  solana_ledger:
+  solana_config:
+
+networks:
+  default:
+    name: cre-debt-network

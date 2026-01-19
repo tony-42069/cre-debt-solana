@@ -1,64 +1,85 @@
 import { Request, Response, NextFunction } from 'express';
 import winston from 'winston';
+import path from 'path';
 
-// Create logger instance
-const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.errors({ stack: true }),
-    winston.format.json()
-  ),
-  defaultMeta: { service: 'cre-debt-api' },
+const LOG_DIR = process.env.LOG_DIR || './logs';
+const LOG_LEVEL = process.env.LOG_LEVEL || 'info';
+
+const logFormat = winston.format.combine(
+  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+  winston.format.errors({ stack: true }),
+  winston.format.json()
+);
+
+const consoleFormat = winston.format.combine(
+  winston.format.colorize(),
+  winston.format.simple()
+);
+
+export const logger = winston.createLogger({
+  level: LOG_LEVEL,
+  format: logFormat,
+  defaultMeta: {
+    service: 'cre-debt-api',
+    version: process.env.npm_package_version || '1.0.0',
+  },
   transports: [
     new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.simple()
-      )
+      format: consoleFormat,
     }),
     new winston.transports.File({
-      filename: 'logs/error.log',
-      level: 'error'
+      filename: path.join(LOG_DIR, 'error.log'),
+      level: 'error',
+      maxsize: 10485760,
+      maxFiles: 5,
     }),
     new winston.transports.File({
-      filename: 'logs/combined.log'
-    })
-  ]
+      filename: path.join(LOG_DIR, 'combined.log'),
+      maxsize: 10485760,
+      maxFiles: 10,
+    }),
+    new winston.transports.File({
+      filename: path.join(LOG_DIR, 'access.log'),
+      level: 'http',
+      maxsize: 10485760,
+      maxFiles: 14,
+    }),
+  ],
 });
 
-// Request logging middleware
 export const loggerMiddleware = (
   req: Request,
   res: Response,
   next: NextFunction
 ): void => {
   const start = Date.now();
+  const requestId = req.headers['x-request-id'] || `req-${Date.now()}`;
 
-  // Log request
   logger.info('Request received', {
+    requestId,
     method: req.method,
-    url: req.url,
+    url: req.originalUrl,
     ip: req.ip,
     userAgent: req.get('User-Agent'),
-    body: req.method !== 'GET' ? req.body : undefined
+    correlationId: requestId,
   });
 
-  // Log response
   res.on('finish', () => {
     const duration = Date.now() - start;
-    const logLevel = res.statusCode >= 400 ? 'warn' : 'info';
+    const logLevel = res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'http';
 
     logger.log(logLevel, 'Request completed', {
+      requestId,
       method: req.method,
-      url: req.url,
+      url: req.originalUrl,
       statusCode: res.statusCode,
       duration: `${duration}ms`,
-      ip: req.ip
+      ip: req.ip,
+      correlationId: requestId,
     });
   });
 
   next();
 };
 
-export { logger };
+export { logger as default };
