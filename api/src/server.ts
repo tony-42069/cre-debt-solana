@@ -19,6 +19,9 @@ import dashboardRoutes from './routes/dashboard';
 import paymentRoutes from './routes/payments';
 import webhookRoutes from './routes/webhooks';
 
+// Import services
+import { healthCheckHandler, metricsHandler } from './services/monitoring';
+
 // Import middleware
 import { errorHandler } from './middleware/errorHandler';
 import { loggerMiddleware } from './middleware/logger';
@@ -92,14 +95,10 @@ app.use(compression());
 app.use(loggerMiddleware);
 
 // Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    environment: config.nodeEnv,
-    version: '1.0.0'
-  });
-});
+app.get('/health', healthCheckHandler);
+app.get('/health/live', (req, res) => res.status(200).json({ status: 'alive' }));
+app.get('/health/ready', healthCheckHandler);
+app.get('/metrics', metricsHandler);
 
 // API routes
 app.use('/api/properties', propertyRoutes);
