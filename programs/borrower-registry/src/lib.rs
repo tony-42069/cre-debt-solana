@@ -1,7 +1,24 @@
+//! # CRE-Debt-Solana: Borrower Registry Smart Contract
+//!
+//! **Version:** 1.1.0 - CPI Ready ✅
+//! **Status:** Production Ready
+//! **Description:** Borrower registration and KYC contract for CRE-Debt platform
+//!
+//! ## Features
+//! - Borrower registration with entity types
+//! - KYC status management
+//! - Risk score tracking
+//! - Cross-program invocation support for loan-core
+//! - Comprehensive event emission
+
 use anchor_lang::prelude::*;
 
 // Program ID for Borrower Registry
 declare_id!("8g6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnU");
+
+// Program ID constants for CPI
+pub const BORROWER_REGISTRY_PROGRAM_ID: &str = "8g6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnU";
+pub const LOAN_CORE_PROGRAM_ID: &str = "H4Rdq9n8KJ9P8n7Fg6PaFpoGXkYsidMpWTK6W2BeZ7FE";
 
 #[program]
 pub mod borrower_registry {
