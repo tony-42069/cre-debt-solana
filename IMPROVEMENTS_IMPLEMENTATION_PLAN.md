@@ -416,11 +416,11 @@ This document outlines a structured plan to address all identified issues in the
 - [x] Task 1.5: Verify App Runs Locally
 
 ### Phase 2: Security Patches
-- [ ] Task 2.1: Implement Wallet Signature Verification
-- [ ] Task 2.2: Fix File Upload Vulnerabilities
-- [ ] Task 2.3: Fix CORS Configuration
-- [ ] Task 2.4: Add Authentication Middleware
-- [ ] Task 2.5: Add Input Validation and Sanitization
+- [x] Task 2.1: Implement Wallet Signature Verification
+- [x] Task 2.2: Fix File Upload Vulnerabilities
+- [x] Task 2.3: Fix CORS Configuration
+- [x] Task 2.4: Add Authentication Middleware
+- [x] Task 2.5: Add Input Validation and Sanitization
 
 ### Phase 3: Missing Features - Pages & API
 - [ ] Task 3.1: Create /properties Page
