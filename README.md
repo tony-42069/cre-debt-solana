@@ -253,7 +253,3 @@ MIT License - see [LICENSE](LICENSE) for details.
 - Create an issue on GitHub
 - Check documentation in [docs/](docs/)
 - Review [FAQ](./docs/FAQ.md)
-
----
-
-**Built with ❤️ on Solana**
