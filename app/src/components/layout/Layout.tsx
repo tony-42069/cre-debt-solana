@@ -72,7 +72,7 @@ export function Section({
 interface FlexProps {
   children: ReactNode;
   className?: string;
-  direction?: 'row' | 'col' | 'row-reverse' | 'col-reverse';
+  direction?: 'row' | 'col' | 'row_reverse' | 'col_reverse';
   justify?: 'start' | 'center' | 'end' | 'between' | 'around';
   align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
   gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';

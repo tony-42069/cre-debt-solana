@@ -1,122 +1,119 @@
 'use client'
 
 import { FC } from 'react'
-import { Building2, Github, Twitter, Mail } from 'lucide-react'
+import Image from 'next/image'
+import { Github, Twitter, Mail } from 'lucide-react'
 
 export const Footer: FC = () => {
   return (
-    <footer className="bg-gray-50 border-t border-gray-200 mt-auto">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Brand Section */}
+    <footer className="bg-surface border-t border-white/5">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
+          {/* Brand */}
           <div className="col-span-1 md:col-span-2">
-            <div className="flex items-center space-x-2 mb-4">
-              <Building2 className="h-8 w-8 text-blue-600" />
-              <span className="text-xl font-bold text-gray-900">CRE-Debt</span>
+            <div className="flex items-center gap-2.5 mb-4">
+              <Image
+                src="/ABARE-logo-new.png"
+                alt="ABARE"
+                width={32}
+                height={32}
+                className="rounded-lg"
+              />
+              <span className="text-lg font-bold text-gradient">ABARE</span>
             </div>
-            <p className="text-gray-600 mb-4 max-w-md">
-              Decentralized Commercial Real Estate Lending Platform on Solana.
-              Access up to 90% of your property equity through blockchain-based secured debt instruments.
+            <p className="text-text-secondary text-sm mb-5 max-w-sm leading-relaxed">
+              Unlock commercial real estate equity through USDC loans in days, not months.
+              The first Solana-native CRE lending platform.
             </p>
-            <div className="flex space-x-4">
-              <a
-                href="https://github.com/tony-42069/cre-debt-solana"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <Github className="h-5 w-5" />
-              </a>
-              <a
-                href="#"
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <Twitter className="h-5 w-5" />
-              </a>
-              <a
-                href="mailto:contact@cre-debt.com"
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <Mail className="h-5 w-5" />
-              </a>
+            <div className="flex gap-3">
+              {[
+                { href: 'https://github.com/tony-42069/cre-debt-solana', icon: Github, label: 'GitHub' },
+                { href: '#', icon: Twitter, label: 'Twitter' },
+                { href: 'mailto:contact@abare.io', icon: Mail, label: 'Email' },
+              ].map((link) => (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  target={link.href.startsWith('http') ? '_blank' : undefined}
+                  rel={link.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                  className="w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-text-muted hover:text-white hover:border-white/20 transition-colors"
+                  aria-label={link.label}
+                >
+                  <link.icon className="h-4 w-4" />
+                </a>
+              ))}
             </div>
           </div>
 
-          {/* Platform Links */}
+          {/* Platform */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4">
+            <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-widest mb-4">
               Platform
             </h3>
-            <ul className="space-y-2">
-              <li>
-                <a href="/properties" className="text-gray-600 hover:text-blue-600 transition-colors">
-                  Browse Properties
-                </a>
-              </li>
-              <li>
-                <a href="/loans" className="text-gray-600 hover:text-blue-600 transition-colors">
-                  Apply for Loan
-                </a>
-              </li>
-              <li>
-                <a href="/dashboard" className="text-gray-600 hover:text-blue-600 transition-colors">
-                  Borrower Dashboard
-                </a>
-              </li>
-              <li>
-                <a href="/lender" className="text-gray-600 hover:text-blue-600 transition-colors">
-                  Institutional Portal
-                </a>
-              </li>
+            <ul className="space-y-2.5">
+              {[
+                { label: 'Browse Properties', href: '/properties' },
+                { label: 'Apply for Loan', href: '/loans' },
+                { label: 'Borrower Dashboard', href: '/dashboard' },
+                { label: 'Institutional Portal', href: '/lender' },
+              ].map((link) => (
+                <li key={link.label}>
+                  <a
+                    href={link.href}
+                    className="text-sm text-text-muted hover:text-white transition-colors"
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
 
           {/* Resources */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4">
+            <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-widest mb-4">
               Resources
             </h3>
-            <ul className="space-y-2">
-              <li>
-                <a href="/docs" className="text-gray-600 hover:text-blue-600 transition-colors">
-                  Documentation
-                </a>
-              </li>
-              <li>
-                <a href="/api" className="text-gray-600 hover:text-blue-600 transition-colors">
-                  API Reference
-                </a>
-              </li>
-              <li>
-                <a href="/security" className="text-gray-600 hover:text-blue-600 transition-colors">
-                  Security
-                </a>
-              </li>
-              <li>
-                <a href="/support" className="text-gray-600 hover:text-blue-600 transition-colors">
-                  Support
-                </a>
-              </li>
+            <ul className="space-y-2.5">
+              {[
+                { label: 'Documentation', href: '/docs' },
+                { label: 'API Reference', href: '/api' },
+                { label: 'Security', href: '/security' },
+                { label: 'Support', href: '/support' },
+              ].map((link) => (
+                <li key={link.label}>
+                  <a
+                    href={link.href}
+                    className="text-sm text-text-muted hover:text-white transition-colors"
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
         </div>
 
-        {/* Bottom Section */}
-        <div className="border-t border-gray-200 mt-8 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-500 text-sm">
-              © 2025 CRE-Debt. All rights reserved.
+        {/* Bottom */}
+        <div className="border-t border-white/5 mt-10 pt-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-text-muted text-xs">
+              &copy; {new Date().getFullYear()} ABARE. All rights reserved.
             </p>
-            <div className="flex space-x-6 mt-4 md:mt-0">
-              <a href="/privacy" className="text-gray-500 hover:text-gray-700 text-sm transition-colors">
-                Privacy Policy
-              </a>
-              <a href="/terms" className="text-gray-500 hover:text-gray-700 text-sm transition-colors">
-                Terms of Service
-              </a>
-              <a href="/compliance" className="text-gray-500 hover:text-gray-700 text-sm transition-colors">
-                Compliance
-              </a>
+            <div className="flex gap-6">
+              {[
+                { label: 'Privacy Policy', href: '/privacy' },
+                { label: 'Terms of Service', href: '/terms' },
+                { label: 'Compliance', href: '/compliance' },
+              ].map((link) => (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  className="text-text-muted hover:text-text-secondary text-xs transition-colors"
+                >
+                  {link.label}
+                </a>
+              ))}
             </div>
           </div>
         </div>

@@ -80,6 +80,7 @@ export function useWalletConnection() {
       if (typeof window === 'undefined') return;
 
       try {
+        // @ts-ignore — module may not be installed; catch block handles gracefully
         const { getStoredAccount } = await import('@solana/wallet-adapter-local-storage');
         const stored = getStoredAccount();
         if (stored && mounted) {

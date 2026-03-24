@@ -1,15 +1,38 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { DM_Sans, Instrument_Serif, Cormorant_Garamond, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import { WalletProvider } from '@/components/providers/WalletProvider'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 
-const inter = Inter({ subsets: ['latin'] })
+const dmSans = DM_Sans({
+  subsets: ['latin'],
+  weight: ['300', '400', '500'],
+  variable: '--font-dm-sans',
+})
+
+const instrumentSerif = Instrument_Serif({
+  subsets: ['latin'],
+  weight: '400',
+  style: ['normal', 'italic'],
+  variable: '--font-instrument-serif',
+})
+
+const cormorantGaramond = Cormorant_Garamond({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  style: ['normal', 'italic'],
+  variable: '--font-cormorant',
+})
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-jetbrains',
+})
 
 export const metadata: Metadata = {
-  title: 'CRE-Debt-Solana',
-  description: 'Decentralized Commercial Real Estate Lending Platform',
+  title: 'ABARE | Commercial Real Estate Lending on Solana',
+  description: 'Unlock commercial real estate equity through USDC loans in days, not months. The first Solana-native CRE lending platform.',
 }
 
 export default function RootLayout({
@@ -18,12 +41,12 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
+    <html lang="en" className="dark">
+      <body className={`${dmSans.variable} ${instrumentSerif.variable} ${cormorantGaramond.variable} ${jetbrainsMono.variable} antialiased`}>
         <WalletProvider>
-          <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+          <div className="min-h-screen flex flex-col bg-background text-foreground">
             <Header />
-            <main className="container mx-auto px-4 py-8">
+            <main className="flex-1">
               {children}
             </main>
             <Footer />
